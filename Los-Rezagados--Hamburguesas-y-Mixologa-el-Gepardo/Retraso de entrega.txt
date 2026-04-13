@@ -1,0 +1,15 @@
+Asunto: Nota sobre la entrega del proyecto
+
+Equipo: Los Resagados
+
+Hola profesor Braulio
+
+Le escribimos esta nota más que nada para comentarle un poco el porqué del retraso con la subida del proyecto.
+
+La verdad es que nos tomó por sorpresa la complejidad de organizar algo de este tamaño. Al ser nuestra primera vez manejando un proyecto así, nos topamos con varios muros técnicos que no esperábamos y nos tomó más tiempo del que planeamos entender cómo conectar todo correctamente.
+
+Aparte de eso, se nos juntaron un par de emergencias personales y salidas que no teníamos previstas en el equipo, lo que nos quitó horas de trabajo importantes en la recta final. También nos peleamos un buen rato con Git y GitHub para que nos dejara subir los archivos sin errores.
+
+Le pedimos una disculpa por la demora. Realmente nos esforzamos por terminarlo y aprender en el proceso, aunque la planificación se nos haya salido de las manos esta vez. Esperamos que pueda tomarnos en cuenta el trabajo que hay detrás del código.
+
+Saludos,
