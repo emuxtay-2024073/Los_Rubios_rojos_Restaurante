@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  restaurants_postgres:
+    image: postgres:13
+    container_name: restaurants_postgres_db
+    environment:
+      POSTGRES_USER: RESTAURANTES
+      POSTGRES_PASSWORD: Restaurantes123!
+      POSTGRES_DB: restaurantes_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - restaurants_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  restaurants_postgres_data:
