@@ -1,0 +1,43 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
+import { DashboardPage } from '../layouts/DashboardPage.jsx';
+import { ProtectedRoutes } from './ProtectedRoutes.jsx';
+import { UnauthorizedPage } from '../../features/auth/pages/UnauthorizedPage.jsx';
+import { RoleGuard } from './RoleGuard.jsx';
+import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
+import { Dashboard } from '../../pages/Dashboard.jsx';
+import { Restaurants } from '../../pages/Restaurants.jsx';
+import { Tables } from '../../pages/Tables.jsx';
+import { Menus } from '../../pages/Menus.jsx';
+import { Orders } from '../../pages/Orders.jsx';
+import { Reservations } from '../../pages/Reservations.jsx';
+import { Reviews } from '../../pages/Reviews.jsx';
+
+export const AppRoutes = () => {
+  return (
+    <Routes>
+      <Route path='/' element={<AuthPage />} />
+      <Route path='/verify-email' element={<VerifyEmailPage />} />
+      <Route path='/unauthorized' element={<UnauthorizedPage />} />
+      <Route
+        path='/dashboard/*'
+        element={
+          <ProtectedRoutes>
+            <RoleGuard allowedRoles={['ADMIN', 'ADMIN_ROLE']}>
+              <DashboardPage />
+            </RoleGuard>
+          </ProtectedRoutes>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path='restaurants' element={<Restaurants />} />
+        <Route path='tables' element={<Tables />} />
+        <Route path='menus' element={<Menus />} />
+        <Route path='orders' element={<Orders />} />
+        <Route path='reservations' element={<Reservations />} />
+        <Route path='reviews' element={<Reviews />} />
+        <Route path='*' element={<Navigate to='/dashboard' replace />} />
+      </Route>
+    </Routes>
+  );
+};
