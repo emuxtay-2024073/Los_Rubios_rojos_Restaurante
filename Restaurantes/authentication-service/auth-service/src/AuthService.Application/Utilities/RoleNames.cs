@@ -17,7 +17,7 @@ public static class RoleNames
         {
             "cliente" => Cliente,
             "user" => Cliente,
-            "user_role" => Cliente,
+            "user_role" => Cliente, 
             "adminrestaurante" => Admin,
             "admin" => Admin,
             _ => null

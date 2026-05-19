@@ -12,11 +12,25 @@ import { Menus } from '../../pages/Menus.jsx';
 import { Orders } from '../../pages/Orders.jsx';
 import { Reservations } from '../../pages/Reservations.jsx';
 import { Reviews } from '../../pages/Reviews.jsx';
+import { ClientPage } from '../../pages/client/ClientPage.jsx';
+import { ClientRestaurantsPage } from '../../pages/client/ClientRestaurantsPage.jsx';
+import { ClientMenuPage } from '../../pages/client/ClientMenuPage.jsx';
+import { ClientReservationsPage } from '../../pages/client/ClientReservationsPage.jsx';
+import { ClientOrdersPage } from '../../pages/client/ClientOrdersPage.jsx';
+import { ClientLayout } from '../layouts/ClientLayout.jsx';
 
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path='/' element={<AuthPage />} />
+      <Route path='/' element={<Navigate to='/login' replace />} />
+      <Route path='/cliente' element={<ClientLayout />}>
+        <Route index element={<ClientPage />} />
+        <Route path='restaurants' element={<ClientRestaurantsPage />} />
+        <Route path='menu/:restaurantId' element={<ClientMenuPage />} />
+        <Route path='reservations' element={<ClientReservationsPage />} />
+        <Route path='orders' element={<ClientOrdersPage />} />
+      </Route>
+      <Route path='/login' element={<AuthPage />} />
       <Route path='/verify-email' element={<VerifyEmailPage />} />
       <Route path='/unauthorized' element={<UnauthorizedPage />} />
       <Route
@@ -38,6 +52,7 @@ export const AppRoutes = () => {
         <Route path='reviews' element={<Reviews />} />
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Route>
+      <Route path='*' element={<Navigate to='/login' replace />} />
     </Routes>
   );
 };
