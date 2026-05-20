@@ -9,7 +9,7 @@ export const RoleGuard = ({ children, allowedRoles = [] }) => {
   const hasAccess = isAuthenticated && allowed.includes(user?.role?.toUpperCase());
 
   if (!hasAccess) {
-    return <Navigate to='/' replace />;
+    return <Navigate to='/login' replace />;
   }
 
   return children;

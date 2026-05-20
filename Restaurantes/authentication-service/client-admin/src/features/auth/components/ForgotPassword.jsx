@@ -9,14 +9,14 @@ export const ForgotPassword = ({ onSwitch }) => {
   return (
     <form className='space-y-5'>
       <div>
-        <label htmlFor='email' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='email' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Email
         </label>
         <input
           type='email'
           id='email'
           placeholder='correo@example.com'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('email', {
             required: 'Este campo es obligatorio',
           })}

@@ -19,6 +19,10 @@ export const RegisterForm = ({ onLogin }) => {
   const password = watch('password', '');
 
   const onSubmit = async (data) => {
+    if (data.password !== data.confirmPassword) {
+      return;
+    }
+
     const payload = {
       username: data.username,
       email: data.email,
@@ -38,14 +42,14 @@ export const RegisterForm = ({ onLogin }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
       <div>
-        <label htmlFor='username' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='username' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Nombre de usuario
         </label>
         <input
           type='text'
           id='username'
           placeholder='usuario123'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('username', {
             required: 'El nombre de usuario es obligatorio',
           })}
@@ -54,14 +58,14 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       <div>
-        <label htmlFor='email' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='email' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Email
         </label>
         <input
           type='email'
           id='email'
           placeholder='correo@example.com'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('email', {
             required: 'El correo es obligatorio',
           })}
@@ -70,14 +74,14 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       <div>
-        <label htmlFor='password' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='password' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Contraseña
         </label>
         <input
           type='password'
           id='password'
           placeholder='* * * * * * *'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('password', {
             required: 'La contraseña es obligatoria',
             minLength: { value: 6, message: 'La contraseña debe tener al menos 6 caracteres' },
@@ -87,14 +91,14 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       <div>
-        <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Confirmar contraseña
         </label>
         <input
           type='password'
           id='confirmPassword'
           placeholder='* * * * * * *'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('confirmPassword', {
             required: 'Debes confirmar la contraseña',
             validate: (value) => value === password || 'Las contraseñas no coinciden',
@@ -104,14 +108,14 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       <div>
-        <label htmlFor='secretKey' className='block text-sm font-medium text-gray-800 mb-1.5'>
+        <label htmlFor='secretKey' className='block text-sm font-medium text-gray-900 mb-1.5'>
           Clave secreta de administrador
         </label>
         <input
           type='text'
           id='secretKey'
           placeholder='CLAVE_ADMIN'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
           {...register('secretKey', {
             required: 'La clave secreta es obligatoria para el registro de administrador',
           })}
@@ -120,6 +124,7 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
+      {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
       {successMessage && <p className='text-green-600 text-sm text-center'>{successMessage}</p>}
 
       <button
