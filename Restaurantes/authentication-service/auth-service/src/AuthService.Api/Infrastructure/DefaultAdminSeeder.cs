@@ -1,0 +1,50 @@
+using AuthService.Application.Utilities;
+using AuthService.Domain.Entities;
+using AuthService.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AuthService.Api.Infrastructure;
+
+public static class DefaultAdminSeeder
+{
+    private const string DefaultUsername = "adminrestaurante";
+    private const string DefaultEmail = "adminrestaurante@losrezagados.com";
+    private const string DefaultPassword = "Admin#2026";
+
+    public static async Task SeedAsync(IServiceProvider serviceProvider, IConfiguration configuration)
+    {
+        var users = serviceProvider.GetRequiredService<IUserRepository>();
+
+        var username = NormalizeValue(configuration["SeedAdmin:Username"], DefaultUsername);
+        var email = NormalizeValue(configuration["SeedAdmin:Email"], DefaultEmail);
+        var password = NormalizeValue(configuration["SeedAdmin:Password"], DefaultPassword);
+        var role = RoleNames.Normalize(configuration["SeedAdmin:Role"]) ?? RoleNames.Admin;
+
+        var existingUser = await users.GetByUsername(username) ?? await users.GetByEmail(email);
+        if (existingUser != null)
+        {
+            return;
+        }
+
+        var admin = new User
+        {
+            Username = username,
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Role = role,
+            EmailConfirmed = true,
+            EmailVerificationToken = null,
+            PasswordResetToken = null
+        };
+
+        await users.Add(admin);
+
+        Console.WriteLine($"[Seed] Admin predeterminado creado: {email}");
+    }
+
+    private static string NormalizeValue(string? value, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+    }
+}

@@ -42,7 +42,7 @@ export const useAuthStore = create(
             token: null,
             refreshToken: null,
             expiresAt: null,
-            isLoadingAuth: true,
+            isLoadingAuth: false,
             isAuthenticated: false,
             error: 'La aplicación sigue en construcción para los clientes',
           });
@@ -92,7 +92,7 @@ export const useAuthStore = create(
               token: null,
               refreshToken: null,
               expiresAt: null,
-              isLoadingAuth: true,
+              isLoadingAuth: false,
               isAuthenticated: false,
               error: message,
               loading: false,
@@ -104,7 +104,7 @@ export const useAuthStore = create(
 
           set({
             user: {
-              id: claims?.sub,
+              id: claims?.sub || claims?.id,
               username: claims?.unique_name,
               email: claims?.email,
               role: 'ADMIN',

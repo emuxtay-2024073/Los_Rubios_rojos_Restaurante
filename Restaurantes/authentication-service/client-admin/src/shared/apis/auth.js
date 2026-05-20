@@ -2,8 +2,8 @@ import { axiosAuth } from './api.js';
 
 export const login = async ({ email, password }) => {
   return await axiosAuth.post('/auth/login', {
-    Email: email,
-    Password: password,
+    email,
+    password,
   });
 };
 
