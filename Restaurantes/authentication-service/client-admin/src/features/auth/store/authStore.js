@@ -32,26 +32,10 @@ export const useAuthStore = create(
       isAuthenticated: false,
       checkAuth: () => {
         const token = get().token;
-        const role = get().user?.role;
-        const adminRoles = ['ADMIN', 'ADMIN_ROLE'];
-        const isAdmin = adminRoles.includes(role);
-
-        if (token && !isAdmin) {
-          set({
-            user: null,
-            token: null,
-            refreshToken: null,
-            expiresAt: null,
-            isLoadingAuth: false,
-            isAuthenticated: false,
-            error: 'La aplicación sigue en construcción para los clientes',
-          });
-          return;
-        }
-
+        // If a token exists, treat the user as authenticated for client or admin flows.
         set({
           isLoadingAuth: false,
-          isAuthenticated: Boolean(token) && isAdmin,
+          isAuthenticated: Boolean(token),
         });
       },
 
@@ -82,32 +66,15 @@ export const useAuthStore = create(
             return { success: false, error: message };
           }
 
-          const claims = parseJwt(token);
-          const role = claims?.role;
-          const adminRoles = ['ADMIN', 'ADMIN_ROLE'];
-          if (!adminRoles.includes(role)) {
-            const message = 'La aplicación sigue en construcción para los clientes';
-            set({
-              user: null,
-              token: null,
-              refreshToken: null,
-              expiresAt: null,
-              isLoadingAuth: false,
-              isAuthenticated: false,
-              error: message,
-              loading: false,
-            });
-
-            showError(message);
-            return { success: false, error: message };
-          }
+          const claims = parseJwt(token) || {};
+          const role = claims?.role || 'CLIENTE';
 
           set({
             user: {
               id: claims?.sub || claims?.id,
-              username: claims?.unique_name,
-              email: claims?.email,
-              role: 'ADMIN',
+              username: claims?.unique_name || claims?.name || null,
+              email: claims?.email || null,
+              role,
             },
             token,
             refreshToken: null,
@@ -115,7 +82,7 @@ export const useAuthStore = create(
             isAuthenticated: true,
             loading: false,
           });
-          return { success: true };
+          return { success: true, role };
         } catch (err) {
           const message = err?.response?.data?.message || err?.message || 'Error al iniciar sesión';
           console.error('Login error:', err);
@@ -141,6 +108,22 @@ export const useAuthStore = create(
         }
       },
     }),
-    { name: 'auth-KS-IN6AM' }
+    {
+      name: 'auth-KS-IN6AM',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        refreshToken: state.refreshToken,
+        expiresAt: state.expiresAt,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.loading = false;
+          state.error = null;
+          state.isLoadingAuth = false;
+        }
+      },
+    }
   )
 );

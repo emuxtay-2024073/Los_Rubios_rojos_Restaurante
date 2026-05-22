@@ -176,6 +176,13 @@ export const Restaurants = () => {
               >
                 Eliminar
               </button>
+              <a
+                href={`/menu/${restaurant._id}`}
+                className='rounded-full bg-main-blue px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'
+                style={{ textDecoration: 'none' }}
+              >
+                Ver menú
+              </a>
             </div>
           </article>
         ))}

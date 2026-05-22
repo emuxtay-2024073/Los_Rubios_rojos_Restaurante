@@ -13,6 +13,7 @@ import { Orders } from '../../pages/Orders.jsx';
 import { Reservations } from '../../pages/Reservations.jsx';
 import { Reviews } from '../../pages/Reviews.jsx';
 import { ClientPage } from '../../pages/client/ClientPage.jsx';
+import { LandingPage } from '../../pages/LandingPage.jsx';
 import { ClientRestaurantsPage } from '../../pages/client/ClientRestaurantsPage.jsx';
 import { ClientMenuPage } from '../../pages/client/ClientMenuPage.jsx';
 import { ClientReservationsPage } from '../../pages/client/ClientReservationsPage.jsx';
@@ -22,7 +23,9 @@ import { ClientLayout } from '../layouts/ClientLayout.jsx';
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path='/' element={<Navigate to='/login' replace />} />
+      <Route path='/' element={<LandingPage />} />
+
+      {/* Public client routes */}
       <Route path='/cliente' element={<ClientLayout />}>
         <Route index element={<ClientPage />} />
         <Route path='restaurants' element={<ClientRestaurantsPage />} />
@@ -52,7 +55,7 @@ export const AppRoutes = () => {
         <Route path='reviews' element={<Reviews />} />
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Route>
-      <Route path='*' element={<Navigate to='/login' replace />} />
+      <Route path='*' element={<Navigate to='/' replace />} />
     </Routes>
   );
 };

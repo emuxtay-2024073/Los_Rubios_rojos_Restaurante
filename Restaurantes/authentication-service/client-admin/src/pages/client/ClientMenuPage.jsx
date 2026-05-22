@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getMenuItems, getRestaurants } from '../../services/clientApi.js';
 import { ClientMenuCard } from '../../shared/components/client/ClientMenuCard.jsx';
+import CartDrawer from '../../shared/components/client/CartDrawer.jsx';
+import useCartStore from '../../features/cart/store/cartStore.js';
 import { ClientSkeleton } from '../../shared/components/ui/ClientSkeleton.jsx';
 import { ClientButton } from '../../shared/components/ui/ClientButton.jsx';
 
@@ -66,6 +68,10 @@ export const ClientMenuPage = () => {
         </div>
       </section>
 
+      <div className='flex justify-end'>
+        <button onClick={() => useCartStore.getState().toggle()} className='rounded-full bg-main-blue px-4 py-2 text-sm font-semibold text-white'>Ver carrito</button>
+      </div>
+
       {error && <div className='rounded-3xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700'>{error}</div>}
 
       <section className='grid gap-5 md:grid-cols-2 xl:grid-cols-3'>
@@ -73,6 +79,8 @@ export const ClientMenuPage = () => {
           ? Array.from({ length: 6 }).map((_, index) => <ClientSkeleton key={index} className='h-72' />)
           : restaurantMenu.map((item) => <ClientMenuCard key={item._id} item={item} />)}
       </section>
+
+      <CartDrawer />
 
       {!loading && restaurantMenu.length === 0 && (
         <section className='rounded-3xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-600 shadow-sm'>

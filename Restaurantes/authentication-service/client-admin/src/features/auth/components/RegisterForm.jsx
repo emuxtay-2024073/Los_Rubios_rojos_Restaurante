@@ -14,9 +14,10 @@ export const RegisterForm = ({ onLogin }) => {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm();
+  } = useForm({ defaultValues: { role: 'CLIENTE' } });
 
   const password = watch('password', '');
+  const selectedRole = watch('role', 'CLIENTE');
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirmPassword) {
@@ -27,7 +28,7 @@ export const RegisterForm = ({ onLogin }) => {
       username: data.username,
       email: data.email,
       password: data.password,
-      role: 'admin',
+      role: selectedRole === 'ADMIN' ? 'ADMIN' : 'CLIENTE',
       secretKey: data.secretKey || '',
     };
 
@@ -107,21 +108,45 @@ export const RegisterForm = ({ onLogin }) => {
         {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
       </div>
 
-      <div>
-        <label htmlFor='secretKey' className='block text-sm font-medium text-gray-900 mb-1.5'>
-          Clave secreta de administrador
+      <div className='grid gap-3 sm:grid-cols-2'>
+        <label className='flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3'>
+          <input
+            type='radio'
+            value='CLIENTE'
+            {...register('role')}
+            className='h-4 w-4 text-main-blue'
+            defaultChecked
+          />
+          <span className='text-sm font-medium text-gray-900'>Cliente</span>
         </label>
-        <input
-          type='text'
-          id='secretKey'
-          placeholder='CLAVE_ADMIN'
-          className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
-          {...register('secretKey', {
-            required: 'La clave secreta es obligatoria para el registro de administrador',
-          })}
-        />
-        {errors.secretKey && <p className='text-red-600 text-xs mt-1'>{errors.secretKey.message}</p>}
+        <label className='flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3'>
+          <input
+            type='radio'
+            value='ADMIN'
+            {...register('role')}
+            className='h-4 w-4 text-main-blue'
+          />
+          <span className='text-sm font-medium text-gray-900'>Administrador</span>
+        </label>
       </div>
+
+      {selectedRole === 'ADMIN' && (
+        <div>
+          <label htmlFor='secretKey' className='block text-sm font-medium text-gray-900 mb-1.5'>
+            Clave secreta de administrador
+          </label>
+          <input
+            type='text'
+            id='secretKey'
+            placeholder='CLAVE_ADMIN'
+            className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
+            {...register('secretKey', {
+              required: 'La clave secreta es obligatoria para el registro de administrador',
+            })}
+          />
+          {errors.secretKey && <p className='text-red-600 text-xs mt-1'>{errors.secretKey.message}</p>}
+        </div>
+      )}
 
       {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
       {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
