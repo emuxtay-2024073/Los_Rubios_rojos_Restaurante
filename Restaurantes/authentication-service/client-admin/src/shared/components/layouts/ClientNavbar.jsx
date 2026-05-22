@@ -1,19 +1,38 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import imgLogo from '../../../assets/img/los_rubios_rojos_logo.svg';
+import { useAuthStore } from '../../../features/auth/store/authStore.js';
+import { useEffect, useRef, useState } from 'react';
 
 const navItems = [
-  { label: 'Inicio', to: '/' },
-  { label: 'Restaurantes', to: '/restaurants' },
-  { label: 'Reservas', to: '/reservations' },
-  { label: 'Órdenes', to: '/orders' },
-  { label: 'Login', to: '/login' },
+  { label: 'Restaurantes', to: '/cliente/restaurants' },
+  { label: 'Reservas', to: '/cliente/reservations' },
+  { label: 'Órdenes', to: '/cliente/orders' },
 ];
 
 export const ClientNavbar = () => {
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <header className='sticky top-0 z-50 border-b border-white/60 bg-white/85 backdrop-blur-xl'>
       <div className='mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8'>
-        <Link to='/' className='flex items-center gap-3'>
+        <Link to='/cliente' className='flex items-center gap-3'>
           <img src={imgLogo} alt='Los Rubios Rojos' className='h-10 w-auto' />
           <div className='hidden sm:block'>
             <p className='text-sm font-semibold text-main-blue'>Los Rubios Rojos</p>
@@ -22,6 +41,20 @@ export const ClientNavbar = () => {
         </Link>
 
         <nav className='hidden gap-2 md:flex'>
+          <NavLink
+            to={'/cliente'}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className={({ isActive }) =>
+              `rounded-full px-4 py-2 text-sm font-medium transition ${
+                isActive
+                  ? 'bg-main-blue text-white shadow-sm'
+                  : 'text-gray-700 hover:bg-surface-soft hover:text-main-blue'
+              }`
+            }
+          >
+            Dashboard
+          </NavLink>
+
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -39,12 +72,32 @@ export const ClientNavbar = () => {
           ))}
         </nav>
 
-        <Link
-          to='/login'
-          className='rounded-full border border-main-blue px-4 py-2 text-sm font-semibold text-main-blue transition hover:bg-main-blue hover:text-white'
-        >
-          Acceso admin
-        </Link>
+        <div className='relative' ref={ref}>
+          {user ? (
+            <button
+              onClick={() => setOpen((s) => !s)}
+              className='inline-flex items-center gap-3 rounded-full border border-main-blue px-4 py-2 text-sm font-semibold text-main-blue bg-white'
+            >
+              <span className='hidden sm:inline'>{user.username || user.email || 'Usuario'}</span>
+              <svg className='w-4 h-4' viewBox='0 0 20 20' fill='currentColor' aria-hidden>
+                <path fillRule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clipRule='evenodd' />
+              </svg>
+            </button>
+          ) : null}
+
+          {open && (
+            <div className='absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5'>
+              <div className='py-1'>
+                <button
+                  onClick={handleLogout}
+                  className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

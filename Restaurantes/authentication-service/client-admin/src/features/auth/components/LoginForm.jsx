@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 export const LoginForm = ({ onForgot, onRegister }) => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
   const error = useAuthStore((state) => state.error);
   const {
@@ -17,8 +18,11 @@ export const LoginForm = ({ onForgot, onRegister }) => {
   const onSubmit = async (data) => {
     const res = await login(data);
     if (res.success) {
-      navigate('/dashboard');
-      toast.success('¡Bienvenido a Sexto!', { duration: 3000 });
+      const role = res.role || user?.role || 'CLIENTE';
+      const isAdmin = role?.toUpperCase()?.includes('ADMIN');
+      const destination = isAdmin ? '/dashboard' : '/cliente';
+      navigate(destination);
+      toast.success(`¡Bienvenido ${isAdmin ? 'administrador' : 'cliente'}!`, { duration: 3000 });
     }
   };
 

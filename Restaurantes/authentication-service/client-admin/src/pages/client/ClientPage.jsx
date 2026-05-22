@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMenuItems, getRestaurants } from '../../services/clientApi.js';
-import { ClientButton } from '../../shared/components/ui/ClientButton.jsx';
+// ClientButton removed — action buttons were removed from the hero
 import { ClientRestaurantCard } from '../../shared/components/client/ClientRestaurantCard.jsx';
 import { ClientMenuCard } from '../../shared/components/client/ClientMenuCard.jsx';
 import { ClientSkeleton } from '../../shared/components/ui/ClientSkeleton.jsx';
@@ -31,7 +31,6 @@ export const ClientPage = () => {
 
   const featuredRestaurants = useMemo(() => restaurants.slice(0, 3), [restaurants]);
   const featuredMenu = useMemo(() => menuItems.slice(0, 4), [menuItems]);
-
   return (
     <div className='space-y-10'>
       <section className='grid items-center gap-8 overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:p-10'>
@@ -48,15 +47,8 @@ export const ClientPage = () => {
               responsive lista para que el equipo continúe.
             </p>
           </div>
-          <div className='flex flex-wrap gap-3'>
-            <Link to='/restaurants'>
-              <ClientButton>Explorar restaurantes</ClientButton>
-            </Link>
-            <Link to='/reservations'>
-              <ClientButton variant='secondary'>Hacer reserva</ClientButton>
-            </Link>
-          </div>
-          <div className='grid gap-4 sm:grid-cols-3'>
+          {/* Action buttons removed as requested */}
+          <div className='grid gap-4 sm:grid-cols-2'>
             <article className='rounded-3xl border border-gray-200 bg-card p-4 shadow-sm'>
               <p className='text-xs font-semibold uppercase tracking-[0.2em] text-main-blue'>Restaurantes</p>
               <p className='mt-3 text-3xl font-black text-gray-900'>{restaurants.length}</p>
@@ -64,10 +56,6 @@ export const ClientPage = () => {
             <article className='rounded-3xl border border-gray-200 bg-card p-4 shadow-sm'>
               <p className='text-xs font-semibold uppercase tracking-[0.2em] text-main-blue'>Platillos</p>
               <p className='mt-3 text-3xl font-black text-gray-900'>{menuItems.length}</p>
-            </article>
-            <article className='rounded-3xl border border-gray-200 bg-card p-4 shadow-sm'>
-              <p className='text-xs font-semibold uppercase tracking-[0.2em] text-main-blue'>Navegación</p>
-              <p className='mt-3 text-3xl font-black text-gray-900'>5 rutas</p>
             </article>
           </div>
         </div>

@@ -9,14 +9,20 @@ import logo from '../../../assets/img/los_rubios_rojos_logo.svg';
 export const AuthPage = () => {
   const clearError = useAuthStore((state) => state.clearError);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const [view, setView] = useState('login');
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      const role = user?.role?.toUpperCase();
+      if (role?.includes('ADMIN')) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/cliente', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const switchView = (nextView) => {
     clearError();
@@ -35,14 +41,14 @@ export const AuthPage = () => {
             {view === 'forgot'
               ? 'Recuperar contraseña'
               : view === 'register'
-              ? 'Registro de administrador'
+              ? 'Registro de usuario'
               : 'Gestión de Restaurantes Los RR'}
           </h1>
           <p className='text-gray-600 text-base max-w-md mx-auto'>
             {view === 'forgot'
               ? 'Ingresa tu correo para recuperar la contraseña'
               : view === 'register'
-              ? 'Crea una cuenta administrativa con la clave secreta'
+              ? 'Crea una cuenta de cliente o administrador según necesites'
               : 'Accede a la plataforma de administración para gestionar tu restaurante'}
           </p>
         </div>

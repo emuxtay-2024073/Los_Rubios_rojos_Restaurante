@@ -5,6 +5,7 @@ using AuthService.Persistence.Data;
 using AuthService.Persistence.Repositories;
 using AuthService.Api.Middlewares;
 using AuthService.Api.Swagger;
+using AuthService.Api.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -167,10 +168,20 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
 
-    Console.WriteLine("[DB] Base de datos conectada correctamente");
+        Console.WriteLine("[DB] Base de datos conectada correctamente");
+
+        await DefaultAdminSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[DB] No se pudo inicializar la base de datos: {ex.Message}");
+        Console.WriteLine("[DB] Continuando en modo degradado. Algunos endpoints pueden no funcionar correctamente.");
+    }
 }
 
 app.Lifetime.ApplicationStarted.Register(() =>
