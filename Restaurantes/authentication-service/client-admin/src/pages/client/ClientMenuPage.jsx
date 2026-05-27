@@ -58,11 +58,14 @@ export const ClientMenuPage = () => {
             </p>
           </div>
           <div className='flex flex-wrap gap-3'>
-            <Link to='/restaurants'>
+            <Link to='/cliente/restaurants'>
               <ClientButton variant='secondary'>Volver a restaurantes</ClientButton>
             </Link>
-            <Link to='/reservations'>
+            <Link to='/cliente/reservations'>
               <ClientButton>Reservar mesa</ClientButton>
+            </Link>
+            <Link to='/cliente/reviews'>
+              <ClientButton variant='ghost'>Dejar reseña</ClientButton>
             </Link>
           </div>
         </div>

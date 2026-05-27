@@ -15,6 +15,7 @@ export const Tables = () => {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ number: '', capacity: '' });
+  const [formErrors, setFormErrors] = useState({});
   const [activeTable, setActiveTable] = useState(null);
 
   const loadRestaurants = async () => {
@@ -75,9 +76,28 @@ export const Tables = () => {
     if (!selectedRestaurantId) return;
 
     try {
+      const number = Number(form.number);
+      const capacity = Number(form.capacity);
+      const errors = {};
+
+      if (!form.number || Number.isNaN(number) || number < 1) errors.number = 'Numero de mesa invalido.';
+      if (!Number.isInteger(number)) errors.number = 'El numero de mesa debe ser entero.';
+      if (!form.capacity || Number.isNaN(capacity) || capacity < 1) errors.capacity = 'Capacidad minima: 1.';
+      if (!Number.isInteger(capacity)) errors.capacity = 'La capacidad debe ser entera.';
+      if (capacity > 50) errors.capacity = 'Capacidad demasiado alta.';
+      if (tables.some((table) => Number(table.number) === number && table._id !== activeTable?._id)) {
+        errors.number = 'Ya existe una mesa con ese numero.';
+      }
+
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        showError('Revisa los campos de la mesa');
+        return;
+      }
+
       const payload = {
-        number: Number(form.number),
-        capacity: Number(form.capacity),
+        number,
+        capacity,
       };
 
       if (activeTable) {
@@ -90,6 +110,7 @@ export const Tables = () => {
 
       setActiveTable(null);
       setForm({ number: '', capacity: '' });
+      setFormErrors({});
       loadTables(selectedRestaurantId);
     } catch (error) {
       console.error(error);
@@ -100,6 +121,7 @@ export const Tables = () => {
   const handleEdit = (table) => {
     setActiveTable(table);
     setForm({ number: table.number, capacity: table.capacity });
+    setFormErrors({});
   };
 
   const handleDelete = async (table) => {
@@ -141,18 +163,27 @@ export const Tables = () => {
       <form onSubmit={handleSubmit} className='grid gap-4 sm:grid-cols-3'>
         <input
           type='number'
+          required
+          min='1'
+          step='1'
           placeholder='Número de mesa'
           value={form.number}
           onChange={(event) => setForm({ ...form, number: event.target.value })}
           className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
         />
+        {formErrors.number && <p className='text-xs text-red-600'>{formErrors.number}</p>}
         <input
           type='number'
+          required
+          min='1'
+          max='50'
+          step='1'
           placeholder='Capacidad'
           value={form.capacity}
           onChange={(event) => setForm({ ...form, capacity: event.target.value })}
           className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
         />
+        {formErrors.capacity && <p className='text-xs text-red-600'>{formErrors.capacity}</p>}
         <button className='rounded-3xl bg-main-blue px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90'>
           {activeTable ? 'Actualizar mesa' : 'Agregar mesa'}
         </button>

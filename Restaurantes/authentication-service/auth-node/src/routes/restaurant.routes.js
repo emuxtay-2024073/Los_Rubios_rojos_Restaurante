@@ -12,6 +12,7 @@ import Reservation from "../models/Reservation.js";
 import Review from "../models/Review.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
 import { ROLE_ADMIN, ROLE_CLIENTE } from "../utils/roles.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ const router = express.Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", verifyToken, verifyRole(ROLE_ADMIN), createRestaurant);
+router.post("/", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), createRestaurant);
 
 /**
  * @swagger
@@ -148,7 +149,7 @@ router.get("/:id", getRestaurantById);
  *       400:
  *         description: Datos inválidos
  */
-router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), updateRestaurant);
+router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), updateRestaurant);
 
 /**
  * @swagger
@@ -345,9 +346,18 @@ router.get("/:restaurantId/reservations", async (req, res) => {
  */
 router.post("/:restaurantId/reviews", verifyToken, verifyRole(ROLE_CLIENTE), async (req, res) => {
     try {
+        const rating = Number(req.body.rating);
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "La calificacion debe estar entre 1 y 5" });
+        }
+
         const review = await Review.create({
             ...req.body,
-            restaurant: req.params.restaurantId
+            rating,
+            restaurant: req.params.restaurantId,
+            customerName: req.body.customerName || req.user?.username,
+            customerEmail: req.body.customerEmail || req.user?.email
         });
         res.status(201).json(review);
     } catch (error) {

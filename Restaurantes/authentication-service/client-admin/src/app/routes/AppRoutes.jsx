@@ -18,6 +18,7 @@ import { ClientRestaurantsPage } from '../../pages/client/ClientRestaurantsPage.
 import { ClientMenuPage } from '../../pages/client/ClientMenuPage.jsx';
 import { ClientReservationsPage } from '../../pages/client/ClientReservationsPage.jsx';
 import { ClientOrdersPage } from '../../pages/client/ClientOrdersPage.jsx';
+import { ClientReviewsPage } from '../../pages/client/ClientReviewsPage.jsx';
 import { ClientLayout } from '../layouts/ClientLayout.jsx';
 
 export const AppRoutes = () => {
@@ -32,6 +33,7 @@ export const AppRoutes = () => {
         <Route path='menu/:restaurantId' element={<ClientMenuPage />} />
         <Route path='reservations' element={<ClientReservationsPage />} />
         <Route path='orders' element={<ClientOrdersPage />} />
+        <Route path='reviews' element={<ClientReviewsPage />} />
       </Route>
       <Route path='/login' element={<AuthPage />} />
       <Route path='/verify-email' element={<VerifyEmailPage />} />

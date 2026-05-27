@@ -24,7 +24,7 @@ export const formatDateForInput = (isoString) => {
 };
 
 export const resolveCloudinaryImageUrl = (photoPath) => {
-  if (!photoPath) return '/placeholder-image.png';
+  if (!photoPath) return '/placeholder-image.svg';
 
   if (/^https?:\/\//i.test(photoPath)) {
     return photoPath;

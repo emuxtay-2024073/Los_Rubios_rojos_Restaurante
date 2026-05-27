@@ -8,7 +8,7 @@ const normalizeResponse = (data, key) => {
 
 const formDataConfig = (payload) => {
   if (payload instanceof FormData) {
-    return { headers: { 'Content-Type': undefined } };
+    return {};
   }
   return {};
 };
@@ -95,6 +95,11 @@ export const updateOrderStatus = async (id, status) => {
 export const getReviewsForRestaurant = async (restaurantId) => {
   const { data } = await axiosAdmin.get(`/restaurants/${restaurantId}/reviews`);
   return normalizeResponse(data, 'reviews');
+};
+
+export const createReviewForRestaurant = async (restaurantId, payload) => {
+  const { data } = await axiosAdmin.post(`/restaurants/${restaurantId}/reviews`, payload);
+  return data;
 };
 
 export const getReservationsForRestaurant = async (restaurantId) => {

@@ -19,6 +19,8 @@ const emptyMenu = {
   image: null,
 };
 
+const imageMaxSize = 5 * 1024 * 1024;
+
 export const Menus = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
@@ -26,8 +28,30 @@ export const Menus = () => {
   const [category, setCategory] = useState('Todos');
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyMenu);
+  const [formErrors, setFormErrors] = useState({});
   const [activeMenuItem, setActiveMenuItem] = useState(null);
   const [menuModalOpen, setMenuModalOpen] = useState(false);
+
+  const validateMenuItem = () => {
+    const errors = {};
+    const price = Number(form.price);
+
+    if (!form.name.trim()) errors.name = 'El nombre es obligatorio.';
+    if (form.name.trim() && form.name.trim().length < 3) errors.name = 'Minimo 3 caracteres.';
+    if (!form.description.trim()) errors.description = 'La descripcion es obligatoria.';
+    if (form.description.trim() && form.description.trim().length < 10) errors.description = 'Minimo 10 caracteres.';
+    if (!form.category.trim()) errors.category = 'La categoria es obligatoria.';
+    if (!form.price || Number.isNaN(price) || price <= 0) errors.price = 'El precio debe ser mayor que 0.';
+    if (!form.image) errors.image = 'La imagen es obligatoria.';
+
+    if (form.image instanceof File) {
+      if (!form.image.type.startsWith('image/')) errors.image = 'Selecciona un archivo de imagen.';
+      if (form.image.size > imageMaxSize) errors.image = 'La imagen no debe superar 5 MB.';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const loadRestaurants = async () => {
     try {
@@ -89,6 +113,7 @@ export const Menus = () => {
 
   const openMenuItemForm = (item = null) => {
     setActiveMenuItem(item);
+    setFormErrors({});
     setForm(
       item
         ? {
@@ -106,11 +131,18 @@ export const Menus = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!selectedRestaurantId) return;
+    if (!validateMenuItem()) {
+      showError('Revisa los campos del platillo');
+      return;
+    }
 
     try {
       const payloadData = {
-        ...form,
-        price: Number(form.price) || 0,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        category: form.category.trim(),
+        image: form.image,
+        price: Number(form.price),
       };
 
       let payload = payloadData;
@@ -222,6 +254,9 @@ export const Menus = () => {
                   src={resolveCloudinaryImageUrl(item.restaurant.image)}
                   alt={item.restaurant.name}
                   className='h-8 w-8 rounded-full object-cover'
+                  onError={(event) => {
+                    event.currentTarget.src = '/placeholder-image.svg';
+                  }}
                 />
                 <span className='text-xs font-medium text-slate-600'>{item.restaurant.name}</span>
               </div>
@@ -231,6 +266,9 @@ export const Menus = () => {
                 src={resolveCloudinaryImageUrl(item.image)}
                 alt={item.name}
                 className='mb-4 h-40 w-full rounded-3xl object-cover'
+                onError={(event) => {
+                  event.currentTarget.src = '/placeholder-image.svg';
+                }}
               />
             )}
             <div className='flex items-start justify-between gap-4'>
@@ -293,38 +331,47 @@ export const Menus = () => {
                 <span className='text-sm font-medium text-slate-700'>Nombre</span>
                 <input
                   type='text'
+                  required
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
+                {formErrors.name && <p className='mt-1 text-xs text-red-600'>{formErrors.name}</p>}
               </label>
               <label className='block'>
                 <span className='text-sm font-medium text-slate-700'>Categoría</span>
                 <input
                   type='text'
+                  required
                   value={form.category}
                   onChange={(event) => setForm({ ...form, category: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
+                {formErrors.category && <p className='mt-1 text-xs text-red-600'>{formErrors.category}</p>}
               </label>
               <label className='block sm:col-span-2'>
                 <span className='text-sm font-medium text-slate-700'>Descripción</span>
                 <textarea
                   value={form.description}
+                  required
                   onChange={(event) => setForm({ ...form, description: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                   rows='4'
                 />
+                {formErrors.description && <p className='mt-1 text-xs text-red-600'>{formErrors.description}</p>}
               </label>
               <label className='block'>
                 <span className='text-sm font-medium text-slate-700'>Precio</span>
                 <input
                   type='number'
                   step='0.01'
+                  min='0.01'
+                  required
                   value={form.price}
                   onChange={(event) => setForm({ ...form, price: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
+                {formErrors.price && <p className='mt-1 text-xs text-red-600'>{formErrors.price}</p>}
               </label>
               <label className='block sm:col-span-2'>
                 <span className='text-sm font-medium text-slate-700'>Imagen del platillo</span>
@@ -335,10 +382,25 @@ export const Menus = () => {
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
                 {form.image && (
-                  <p className='mt-2 text-xs text-slate-500'>
-                    {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
-                  </p>
+                  <div className='mt-3 space-y-2'>
+                    <img
+                      src={
+                        form.image instanceof File
+                          ? URL.createObjectURL(form.image)
+                          : resolveCloudinaryImageUrl(form.image)
+                      }
+                      alt='Vista previa del platillo'
+                      className='h-40 w-full rounded-2xl object-cover'
+                      onError={(event) => {
+                        event.currentTarget.src = '/placeholder-image.svg';
+                      }}
+                    />
+                    <p className='text-xs text-slate-500'>
+                      {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
+                    </p>
+                  </div>
                 )}
+                {formErrors.image && <p className='mt-1 text-xs text-red-600'>{formErrors.image}</p>}
               </label>
               <div className='sm:col-span-2 flex justify-end gap-3 pt-2'>
                 <button

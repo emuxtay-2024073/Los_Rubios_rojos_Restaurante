@@ -8,6 +8,7 @@ import {
 } from "../controllers/menuItem.controller.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
 import { ROLE_ADMIN } from "../utils/roles.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ const router = express.Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", verifyToken, verifyRole(ROLE_ADMIN), createMenuItem);
+router.post("/", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), createMenuItem);
 
 /**
  * @swagger
@@ -133,7 +134,7 @@ router.get("/restaurant/:restaurantId", getMenuItemsByRestaurant);
  *       400:
  *         description: Datos inválidos
  */
-router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), updateMenuItem);
+router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), updateMenuItem);
 
 /**
  * @swagger
