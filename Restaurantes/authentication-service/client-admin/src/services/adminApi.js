@@ -101,3 +101,13 @@ export const getReservationsForRestaurant = async (restaurantId) => {
   const { data } = await axiosAdmin.get(`/restaurants/${restaurantId}/reservations`);
   return normalizeResponse(data, 'reservations');
 };
+
+export const createReservation = async (restaurantId, payload) => {
+  const { data } = await axiosAdmin.post(`/restaurants/${restaurantId}/reservations`, payload);
+  return data;
+};
+
+export const createOrder = async (payload) => {
+  const { data } = await axiosAdmin.post('/orders', payload);
+  return data;
+};

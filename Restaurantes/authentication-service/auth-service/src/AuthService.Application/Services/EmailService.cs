@@ -19,9 +19,26 @@ public class EmailService : IEmailService
     {
         var smtpSettings = _config.GetSection("SmtpSettings");
 
+        var fromName = smtpSettings["FromName"];
+        var fromEmail = smtpSettings["FromEmail"];
+        var host = smtpSettings["Host"];
+        var username = smtpSettings["Username"];
+        var password = smtpSettings["Password"];
+
+        if (string.IsNullOrWhiteSpace(fromEmail))
+            throw new InvalidOperationException("SmtpSettings:FromEmail is required.");
+        if (string.IsNullOrWhiteSpace(to))
+            throw new ArgumentException("Destination email address is required.", nameof(to));
+        if (string.IsNullOrWhiteSpace(host))
+            throw new InvalidOperationException("SmtpSettings:Host is required.");
+        if (string.IsNullOrWhiteSpace(username))
+            throw new InvalidOperationException("SmtpSettings:Username is required.");
+        if (string.IsNullOrWhiteSpace(password))
+            throw new InvalidOperationException("SmtpSettings:Password is required.");
+
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(smtpSettings["FromName"], smtpSettings["FromEmail"]));
-        message.To.Add(new MailboxAddress("", to));
+        message.From.Add(new MailboxAddress(fromName ?? string.Empty, fromEmail));
+        message.To.Add(new MailboxAddress(string.Empty, to));
         message.Subject = subject;
 
         var bodyBuilder = new BodyBuilder
@@ -34,8 +51,8 @@ public class EmailService : IEmailService
         try
         {
             var port = int.TryParse(smtpSettings["Port"], out var p) ? p : 587;
-            await client.ConnectAsync(smtpSettings["Host"], port, SecureSocketOptions.SslOnConnect);
-            await client.AuthenticateAsync(smtpSettings["Username"], smtpSettings["Password"]);
+            await client.ConnectAsync(host, port, SecureSocketOptions.SslOnConnect);
+            await client.AuthenticateAsync(username, password);
             await client.SendAsync(message);
         }
         catch (Exception ex)

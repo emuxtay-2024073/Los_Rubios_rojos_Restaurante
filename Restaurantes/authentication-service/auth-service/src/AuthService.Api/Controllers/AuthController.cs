@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
             var result = await _auth.Login(dto);
             return result.Success ? Ok(result) : Unauthorized(result);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Fallback development mode: if DB is down or service throws, allow seeded admin login
             var seedEmail = _configuration["SeedAdmin:Email"];
