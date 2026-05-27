@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { login as loginRequest, register as registerRequest } from '../../../shared/apis';
-import { showError } from '../../../shared/utils/toast.js';
+
 
 const parseJwt = (token) => {
   try {
@@ -84,7 +84,8 @@ export const useAuthStore = create(
           });
           return { success: true, role };
         } catch (err) {
-          const message = err?.response?.data?.message || err?.message || 'Error al iniciar sesión';
+      console.error(err);
+      const message = err?.response?.data?.message || err?.message || 'Error al iniciar sesión';
           console.error('Login error:', err);
           set({ error: message, loading: false });
           return { success: false, error: message };
@@ -102,7 +103,8 @@ export const useAuthStore = create(
             data,
           };
         } catch (err) {
-          const message = err.response?.data?.message || 'Error al registrar usuario';
+      console.error(err);
+      const message = err.response?.data?.message || 'Error al registrar usuario';
           set({ error: message, loading: false });
           return { success: false, error: message };
         }

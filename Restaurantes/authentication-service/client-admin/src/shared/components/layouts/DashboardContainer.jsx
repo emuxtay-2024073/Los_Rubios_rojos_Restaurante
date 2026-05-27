@@ -6,10 +6,10 @@ export const DashboardContainer = ({ user, onLogout, children }) => {
     <div className='min-h-screen bg-gray-50 flex flex-col'>
       <Navbar user={user} onLogout={onLogout} />
 
-      <div className='flex flex-1'>
+      <div className='flex flex-col md:flex-row flex-1'>
         <Sidebar />
 
-        <main className='flex-1 p-6'>{children}</main>
+        <main className='flex-1 p-6 overflow-x-hidden'>{children}</main>
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ export const Orders = () => {
         setOrders([]);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -38,6 +39,7 @@ export const Orders = () => {
       const data = await getOrders();
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar las órdenes');
     } finally {
       setLoading(false);
@@ -70,6 +72,7 @@ export const Orders = () => {
       setOrders((current) => current.map((order) => (order._id === updated._id ? updated : order)));
       showSuccess('Estado de la orden actualizado');
     } catch (error) {
+      console.error(error);
       showError('No se pudo actualizar el estado de la orden');
     }
   };

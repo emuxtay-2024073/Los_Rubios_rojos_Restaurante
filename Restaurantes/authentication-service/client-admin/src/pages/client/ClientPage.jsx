@@ -20,7 +20,8 @@ export const ClientPage = () => {
         setRestaurants(Array.isArray(restaurantsData) ? restaurantsData : []);
         setMenuItems(Array.isArray(menuItemsData) ? menuItemsData : []);
       } catch (err) {
-        setError('No se pudo validar la conexión con la API.');
+      console.error(err);
+      setError('No se pudo validar la conexión con la API.');
       } finally {
         setLoading(false);
       }

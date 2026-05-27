@@ -39,6 +39,7 @@ export const Menus = () => {
         setSelectedRestaurantId(items[0]._id);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -56,6 +57,7 @@ export const Menus = () => {
         setMenuItems(Array.isArray(data) ? data : []);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los menús');
     } finally {
       setLoading(false);
@@ -134,6 +136,7 @@ export const Menus = () => {
       setMenuModalOpen(false);
       loadMenuItems(selectedRestaurantId);
     } catch (error) {
+      console.error(error);
       showError('No se pudo guardar el elemento de menú');
     }
   };
@@ -147,6 +150,7 @@ export const Menus = () => {
       showSuccess('Platillo eliminado');
       loadMenuItems(selectedRestaurantId);
     } catch (error) {
+      console.error(error);
       showError('No se pudo eliminar el platillo');
     }
   };

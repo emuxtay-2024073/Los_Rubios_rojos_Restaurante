@@ -30,6 +30,7 @@ export const Tables = () => {
         setTables([]);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -47,6 +48,7 @@ export const Tables = () => {
       const data = await getTablesForRestaurant(restaurantId);
       setTables(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar las mesas');
     } finally {
       setLoading(false);
@@ -90,6 +92,7 @@ export const Tables = () => {
       setForm({ number: '', capacity: '' });
       loadTables(selectedRestaurantId);
     } catch (error) {
+      console.error(error);
       showError('No se pudo guardar la mesa');
     }
   };
@@ -108,6 +111,7 @@ export const Tables = () => {
       showSuccess('Mesa eliminada');
       loadTables(selectedRestaurantId);
     } catch (error) {
+      console.error(error);
       showError('No se pudo eliminar la mesa');
     }
   };

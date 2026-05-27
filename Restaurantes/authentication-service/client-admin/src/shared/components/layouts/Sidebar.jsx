@@ -21,16 +21,16 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className='w-60 bg-white min-h-[calc(100vh-4rem)] p-4 shadow-sm'>
-      <div className='mb-6'>
+    <aside className='w-full md:w-60 bg-white md:min-h-[calc(100vh-4rem)] p-4 shadow-sm shrink-0'>
+      <div className='mb-6 hidden md:block'>
         <h2 className='text-xl font-semibold text-main-blue'>Los Rubios Rojos</h2>
         <p className='text-sm text-gray-500'>Gestión de restaurantes</p>
       </div>
-      <ul className='space-y-1'>
+      <ul className='flex md:flex-col overflow-x-auto md:overflow-visible space-x-2 md:space-x-0 md:space-y-1 pb-2 md:pb-0'>
         {items.map((item) => {
           const active = isActive(item.to);
           return (
-            <li key={item.to}>
+            <li key={item.to} className="shrink-0">
               <Link
                 to={item.to}
                 className={`block px-4 py-2 rounded-lg font-medium transition-colors sidebar-underline${active ? ' active text-main-blue' : ' text-gray-700 hover:bg-gray-100'}`}
