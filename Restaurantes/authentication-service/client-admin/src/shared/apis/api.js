@@ -99,6 +99,7 @@ const handleRefreshToken = async function (_error) {
       _original.headers['Authorization'] = 'Bearer ' + accessToken;
       return retryClient(_original);
     } catch (err) {
+      console.error(err);
       _processQueue(err, null);
       useAuthStore.getState().logout();
       return Promise.reject(err);

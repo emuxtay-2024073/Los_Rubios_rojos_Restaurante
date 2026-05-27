@@ -57,6 +57,7 @@ export const ClientReservationsPage = () => {
         setForm((prev) => ({ ...prev, restaurant: items[0]._id }));
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -78,6 +79,7 @@ export const ClientReservationsPage = () => {
         .sort((a, b) => a.capacity - b.capacity || a.number - b.number);
       setAvailableTables(filtered);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar las mesas disponibles');
     } finally {
       setLoading(false);

@@ -22,6 +22,7 @@ export const Reviews = () => {
         setReviews([]);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -39,6 +40,7 @@ export const Reviews = () => {
       const data = await getReviewsForRestaurant(restaurantId);
       setReviews(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar las reseñas');
     } finally {
       setLoading(false);

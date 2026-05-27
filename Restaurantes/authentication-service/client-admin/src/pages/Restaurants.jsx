@@ -30,6 +30,7 @@ export const Restaurants = () => {
       const data = await getRestaurants();
       setRestaurants(Array.isArray(data) ? data : data?.restaurants ?? []);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -96,6 +97,7 @@ export const Restaurants = () => {
       setModalOpen(false);
       loadRestaurants();
     } catch (error) {
+      console.error(error);
       showError('No se pudo guardar el restaurante');
     }
   };
@@ -108,6 +110,7 @@ export const Restaurants = () => {
       showSuccess('Restaurante eliminado');
       loadRestaurants();
     } catch (error) {
+      console.error(error);
       showError('No se pudo eliminar el restaurante');
     }
   };

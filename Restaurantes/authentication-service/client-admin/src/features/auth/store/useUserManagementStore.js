@@ -41,6 +41,7 @@ export const useUserManagementStore = create((set, get) => ({
         loading: false,
       });
     } catch (err) {
+      console.error(err);
       set({
         error: err.response?.data?.message || 'Error al listar usuarios',
         loading: false,

@@ -54,7 +54,8 @@ export const ClientOrdersPage = () => {
           setSelectedTableNumber((prev) => prev || fetchedTables[0].number);
         }
       } catch (error) {
-        showError('No se pudieron cargar las mesas disponibles');
+      console.error(error);
+      showError('No se pudieron cargar las mesas disponibles');
       } finally {
         setLoading(false);
       }
@@ -72,7 +73,7 @@ export const ClientOrdersPage = () => {
     if (formError) {
       setFormError('');
     }
-  }, [items.length, tableId, sameRestaurant, tables.length]);
+  }, [items.length, tableId, sameRestaurant, tables.length, formError]);
 
   const getValidationMessage = () => {
     if (!items.length) return 'El carrito está vacío. Agrega productos antes de confirmar el pedido.';

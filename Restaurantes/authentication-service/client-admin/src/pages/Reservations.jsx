@@ -25,6 +25,7 @@ export const Reservations = () => {
         setReservations([]);
       }
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar los restaurantes');
     } finally {
       setLoading(false);
@@ -42,6 +43,7 @@ export const Reservations = () => {
       const data = await getReservationsForRestaurant(restaurantId);
       setReservations(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error(error);
       showError('No se pudieron cargar las reservaciones');
     } finally {
       setLoading(false);
