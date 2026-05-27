@@ -71,9 +71,20 @@ export const useAuthStore = create(
 
           set({
             user: {
-              id: claims?.sub || claims?.id,
-              username: claims?.unique_name || claims?.name || null,
-              email: claims?.email || null,
+              id:
+                claims?.sub ||
+                claims?.id ||
+                claims?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
+              username:
+                claims?.unique_name ||
+                claims?.username ||
+                claims?.name ||
+                claims?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ||
+                null,
+              email:
+                claims?.email ||
+                claims?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+                null,
               role,
             },
             token,

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Spinner } from '../../auth/components/Spinner.jsx';
 
@@ -7,26 +8,31 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
     handleSubmit,
     getValues,
     reset,
+    watch,
     formState: { errors },
-  } = useForm();
+  } = useForm({ defaultValues: { role: 'CLIENTE' } });
+
+  const selectedRole = watch('role', 'CLIENTE');
+
+  useEffect(() => {
+    if (!isOpen) {
+      reset({ role: 'CLIENTE' });
+    }
+  }, [isOpen, reset]);
 
   if (!isOpen) return null;
 
   const submit = async (values) => {
-    const formData = new FormData();
-    formData.append('name', values.name);
-    formData.append('surname', values.surname);
-    formData.append('username', values.username);
-    formData.append('email', values.email);
-    formData.append('password', values.password);
-    formData.append('phone', values.phone);
-    if (values.profilePicture?.[0]) {
-      formData.append('profilePicture', values.profilePicture[0]);
-    }
+    const ok = await onCreate({
+      username: values.username,
+      email: values.email,
+      password: values.password,
+      role: values.role || 'CLIENTE',
+      secretKey: values.role === 'ADMIN' ? values.secretKey || '' : '',
+    });
 
-    const ok = await onCreate(formData);
     if (ok) {
-      reset();
+      reset({ role: 'CLIENTE' });
       onClose();
     }
   };
@@ -42,34 +48,11 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
         >
           <h2 className='text-xl sm:text-2xl font-bold'>Nuevo Usuario</h2>
           <p className='text-xs sm:text-sm opacity-80'>
-            Completa la información para registrar un nuevo usuario
+            Completa la informacion para registrar un nuevo usuario
           </p>
         </div>
 
         <form onSubmit={handleSubmit(submit)} className='p-5 sm:p-6 space-y-5 overflow-y-auto'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>Nombre</label>
-              <input
-                {...register('name', { required: 'El nombre es obligatorio' })}
-                type='text'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
-              />
-              {errors.name && <p className='text-red-600 text-xs'>{errors.name.message}</p>}
-            </div>
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>Apellido</label>
-              <input
-                {...register('surname', {
-                  required: 'El apellido es obligatorio',
-                })}
-                type='text'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
-              />
-              {errors.surname && <p className='text-red-600 text-xs'>{errors.surname.message}</p>}
-            </div>
-          </div>
-
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-semibold text-gray-700 mb-1'>
@@ -88,20 +71,16 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
               />
               {errors.username && <p className='text-red-600 text-xs'>{errors.username.message}</p>}
             </div>
+
             <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>Teléfono</label>
-              <input
-                {...register('phone', {
-                  required: 'El teléfono es obligatorio',
-                  pattern: {
-                    value: /^[0-9]{8}$/,
-                    message: 'Debe ser un número de 8 dígitos',
-                  },
-                })}
-                type='tel'
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>Rol</label>
+              <select
+                {...register('role')}
                 className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
-              />
-              {errors.phone && <p className='text-red-600 text-xs'>{errors.phone.message}</p>}
+              >
+                <option value='CLIENTE'>Cliente</option>
+                <option value='ADMIN'>Administrador</option>
+              </select>
             </div>
           </div>
 
@@ -112,7 +91,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                 required: 'El email es obligatorio',
                 pattern: {
                   value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
-                  message: 'Formato de email inválido',
+                  message: 'Formato de email invalido',
                 },
               })}
               type='email'
@@ -123,13 +102,13 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
 
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>Contraseña</label>
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>Contrasena</label>
               <input
                 {...register('password', {
-                  required: 'La contraseña es obligatoria',
+                  required: 'La contrasena es obligatoria',
                   minLength: {
-                    value: 8,
-                    message: 'Debe tener al menos 8 caracteres',
+                    value: 6,
+                    message: 'Debe tener al menos 6 caracteres',
                   },
                 })}
                 type='password'
@@ -137,16 +116,17 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
               />
               {errors.password && <p className='text-red-600 text-xs'>{errors.password.message}</p>}
             </div>
+
             <div>
               <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                Confirmar contraseña
+                Confirmar contrasena
               </label>
               <input
                 {...register('confirmPassword', {
-                  required: 'Debe confirmar su contraseña',
+                  required: 'Debe confirmar su contrasena',
                   validate: {
                     matchesPassword: (value) =>
-                      value === getValues('password') || 'Las contraseñas no coinciden',
+                      value === getValues('password') || 'Las contrasenas no coinciden',
                   },
                 })}
                 type='password'
@@ -158,15 +138,24 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
             </div>
           </div>
 
-          <div>
-            <label className='block text-sm font-semibold text-gray-700 mb-1'>Foto de Perfil</label>
-            <input
-              {...register('profilePicture')}
-              type='file'
-              accept='image/*'
-              className='w-full px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition cursor-pointer'
-            />
-          </div>
+          {selectedRole === 'ADMIN' && (
+            <div>
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                Clave secreta de administrador
+              </label>
+              <input
+                {...register('secretKey', {
+                  validate: (value) =>
+                    selectedRole !== 'ADMIN' ||
+                    Boolean(value?.trim()) ||
+                    'La clave secreta es obligatoria para crear un administrador',
+                })}
+                type='text'
+                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
+              />
+              {errors.secretKey && <p className='text-red-600 text-xs'>{errors.secretKey.message}</p>}
+            </div>
+          )}
 
           {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
 
@@ -174,7 +163,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
             <button
               type='button'
               onClick={() => {
-                reset();
+                reset({ role: 'CLIENTE' });
                 onClose();
               }}
               className='w-full sm:w-auto px-5 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition'

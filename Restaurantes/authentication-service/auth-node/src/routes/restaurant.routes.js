@@ -11,6 +11,7 @@ import { createTable, getTables } from "../controllers/tableController.js";
 import Reservation from "../models/Reservation.js";
 import Review from "../models/Review.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
+import upload from "../middleware/upload.js";
 import { ROLE_ADMIN, ROLE_CLIENTE } from "../utils/roles.js";
 
 const router = express.Router();
@@ -70,7 +71,7 @@ const router = express.Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", verifyToken, verifyRole(ROLE_ADMIN), createRestaurant);
+router.post("/", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), createRestaurant);
 
 /**
  * @swagger
@@ -148,7 +149,7 @@ router.get("/:id", getRestaurantById);
  *       400:
  *         description: Datos inválidos
  */
-router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), updateRestaurant);
+router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), updateRestaurant);
 
 /**
  * @swagger

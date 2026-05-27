@@ -40,34 +40,37 @@ public class EmailService : IEmailService
         message.From.Add(new MailboxAddress(fromName ?? string.Empty, fromEmail));
         message.To.Add(new MailboxAddress(string.Empty, to));
         message.Subject = subject;
-
-        var bodyBuilder = new BodyBuilder
-        {
-            HtmlBody = body
-        };
-        message.Body = bodyBuilder.ToMessageBody();
+        message.Body = new BodyBuilder { HtmlBody = body }.ToMessageBody();
 
         using var client = new SmtpClient();
         try
         {
             var port = int.TryParse(smtpSettings["Port"], out var p) ? p : 587;
-            await client.ConnectAsync(host, port, SecureSocketOptions.SslOnConnect);
+            var useImplicitSsl = bool.TryParse(smtpSettings["UseImplicitSsl"], out var implicitSsl)
+                ? implicitSsl
+                : port == 465;
+            var socketOptions = useImplicitSsl
+                ? SecureSocketOptions.SslOnConnect
+                : SecureSocketOptions.StartTls;
+
+            await client.ConnectAsync(host, port, socketOptions);
             await client.AuthenticateAsync(username, password);
             await client.SendAsync(message);
         }
         catch (Exception ex)
         {
-            // Log error
             Console.WriteLine($"Error sending email: {ex.Message}");
             throw;
         }
         finally
         {
-            await client.DisconnectAsync(true);
+            if (client.IsConnected)
+            {
+                await client.DisconnectAsync(true);
+            }
         }
     }
 
-    // Keep the old method for compatibility, but make it async
     public void SendEmail(string to, string subject, string body)
     {
         SendEmailAsync(to, subject, body).Wait();
