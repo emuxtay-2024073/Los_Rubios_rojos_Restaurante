@@ -24,6 +24,16 @@ public static class DefaultAdminSeeder
         var existingUser = await users.GetByUsername(username) ?? await users.GetByEmail(email);
         if (existingUser != null)
         {
+            existingUser.Username = username;
+            existingUser.Email = email;
+            existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+            existingUser.Role = role;
+            existingUser.EmailConfirmed = true;
+            existingUser.EmailVerificationToken = null;
+            existingUser.PasswordResetToken = null;
+
+            await users.Update(existingUser);
+            Console.WriteLine($"[Seed] Admin predeterminado actualizado: {email}");
             return;
         }
 

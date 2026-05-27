@@ -98,7 +98,7 @@ export const Restaurants = () => {
       loadRestaurants();
     } catch (error) {
       console.error(error);
-      showError('No se pudo guardar el restaurante');
+      showError(error.response?.data?.message || 'No se pudo guardar el restaurante');
     }
   };
 
@@ -150,6 +150,9 @@ export const Restaurants = () => {
                 src={resolveCloudinaryImageUrl(restaurant.image)}
                 alt={restaurant.name}
                 className='mb-4 h-48 w-full rounded-3xl object-cover'
+                onError={(event) => {
+                  event.currentTarget.src = '/placeholder-image.svg';
+                }}
               />
             )}
             <div className='flex items-start justify-between gap-4'>
@@ -215,19 +218,20 @@ export const Restaurants = () => {
             </div>
             <form onSubmit={handleSubmit} className='mt-6 grid gap-4 sm:grid-cols-2'>
               {[
-                { key: 'name', label: 'Nombre', type: 'text' },
+                { key: 'name', label: 'Nombre', type: 'text', required: true },
                 { key: 'city', label: 'Ciudad', type: 'text' },
-                { key: 'address', label: 'Dirección', type: 'text' },
+                { key: 'address', label: 'Dirección', type: 'text', required: true },
                 { key: 'manager', label: 'Encargado', type: 'text' },
                 { key: 'phone', label: 'Teléfono', type: 'text' },
                 { key: 'email', label: 'Correo electrónico', type: 'email' },
                 { key: 'capacity', label: 'Capacidad', type: 'number' },
                 { key: 'openingHours', label: 'Horario de atención', type: 'text' },
-              ].map(({ key, label, type }) => (
+              ].map(({ key, label, type, required }) => (
                 <label key={key} className='block'>
                   <span className='text-sm font-medium text-slate-700'>{label}</span>
                   <input
                     type={type}
+                    required={required}
                     value={form[key] ?? ''}
                     onChange={(event) => setForm({ ...form, [key]: event.target.value })}
                     className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
@@ -243,9 +247,23 @@ export const Restaurants = () => {
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
                 {form.image && (
-                  <p className='mt-2 text-xs text-slate-500'>
-                    {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
-                  </p>
+                  <div className='mt-3 space-y-2'>
+                    <img
+                      src={
+                        form.image instanceof File
+                          ? URL.createObjectURL(form.image)
+                          : resolveCloudinaryImageUrl(form.image)
+                      }
+                      alt='Vista previa del restaurante'
+                      className='h-40 w-full rounded-2xl object-cover'
+                      onError={(event) => {
+                        event.currentTarget.src = '/placeholder-image.svg';
+                      }}
+                    />
+                    <p className='text-xs text-slate-500'>
+                      {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
+                    </p>
+                  </div>
                 )}
               </label>
               <div className='sm:col-span-2 flex justify-end gap-3 pt-2'>

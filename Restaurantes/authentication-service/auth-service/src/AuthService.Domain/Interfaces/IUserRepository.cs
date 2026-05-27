@@ -8,6 +8,7 @@ public interface IUserRepository
     Task<User?> GetByEmail(string email);
     Task<User?> GetByVerificationToken(string token);
     Task<User?> GetByResetToken(string token);
+    Task<IReadOnlyList<User>> GetAll();
 
     Task Add(User user);
     Task Update(User user);

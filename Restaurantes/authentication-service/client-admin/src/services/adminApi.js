@@ -8,7 +8,7 @@ const normalizeResponse = (data, key) => {
 
 const formDataConfig = (payload) => {
   if (payload instanceof FormData) {
-    return { headers: { 'Content-Type': undefined } };
+    return {};
   }
   return {};
 };

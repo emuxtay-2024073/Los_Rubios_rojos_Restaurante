@@ -1,9 +1,35 @@
 import MenuItem from "../models/MenuItem.js";
 import Restaurant from "../models/Restaurant.js";
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs/promises";
+
+const buildMenuItemPayload = async (body, file) => {
+    const payload = {
+        name: body.name?.trim(),
+        description: body.description?.trim(),
+        category: body.category?.trim(),
+        restaurant: body.restaurant
+    };
+
+    if (body.price !== undefined && body.price !== "") {
+        payload.price = Number(body.price);
+    }
+
+    if (file) {
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+            folder: process.env.CLOUDINARY_FOLDER || "menu-items"
+        });
+        payload.image = uploadResult.secure_url;
+        await fs.unlink(file.path).catch(() => {});
+    }
+
+    return payload;
+};
 
 export const createMenuItem = async (req, res) => {
     try {
-        const { restaurant } = req.body;
+        const payload = await buildMenuItemPayload(req.body, req.file);
+        const { restaurant } = payload;
 
         const existingRestaurant = await Restaurant.findById(restaurant);
         if (!existingRestaurant) {
@@ -12,7 +38,7 @@ export const createMenuItem = async (req, res) => {
             });
         }
 
-        const menuItem = await MenuItem.create(req.body);
+        const menuItem = await MenuItem.create(payload);
 
         res.status(201).json({
             message: "Platillo creado correctamente",
@@ -55,7 +81,8 @@ export const getMenuItemsByRestaurant = async (req, res) => {
 
 export const updateMenuItem = async (req, res) => {
     try {
-        const menuItem = await MenuItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const payload = await buildMenuItemPayload(req.body, req.file);
+        const menuItem = await MenuItem.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
         if (!menuItem) {
             return res.status(404).json({ message: "Platillo no encontrado" });
         }

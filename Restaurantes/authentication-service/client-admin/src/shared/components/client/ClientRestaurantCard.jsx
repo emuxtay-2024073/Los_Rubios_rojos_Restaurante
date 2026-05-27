@@ -1,11 +1,19 @@
 import { Link } from 'react-router-dom';
 import { ClientButton } from '../ui/ClientButton.jsx';
+import { resolveCloudinaryImageUrl } from '../../utils/formatters.js';
 
 export const ClientRestaurantCard = ({ restaurant }) => {
   return (
     <article className='overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg'>
       {restaurant.image ? (
-        <img src={restaurant.image} alt={restaurant.name} className='h-44 w-full object-cover' />
+        <img
+          src={resolveCloudinaryImageUrl(restaurant.image)}
+          alt={restaurant.name}
+          className='h-44 w-full object-cover'
+          onError={(event) => {
+            event.currentTarget.src = '/placeholder-image.svg';
+          }}
+        />
       ) : (
         <div className='h-44 bg-[linear-gradient(135deg,rgba(216,48,48,0.95),rgba(216,48,48,0.65),rgba(222,153,78,0.8))] p-6 text-white'>
           <p className='text-xs font-semibold uppercase tracking-[0.3em] text-white/80'>Restaurante</p>

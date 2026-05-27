@@ -137,7 +137,7 @@ export const Menus = () => {
       loadMenuItems(selectedRestaurantId);
     } catch (error) {
       console.error(error);
-      showError('No se pudo guardar el elemento de menú');
+      showError(error.response?.data?.message || 'No se pudo guardar el elemento de menú');
     }
   };
 
@@ -222,6 +222,9 @@ export const Menus = () => {
                   src={resolveCloudinaryImageUrl(item.restaurant.image)}
                   alt={item.restaurant.name}
                   className='h-8 w-8 rounded-full object-cover'
+                  onError={(event) => {
+                    event.currentTarget.src = '/placeholder-image.svg';
+                  }}
                 />
                 <span className='text-xs font-medium text-slate-600'>{item.restaurant.name}</span>
               </div>
@@ -231,6 +234,9 @@ export const Menus = () => {
                 src={resolveCloudinaryImageUrl(item.image)}
                 alt={item.name}
                 className='mb-4 h-40 w-full rounded-3xl object-cover'
+                onError={(event) => {
+                  event.currentTarget.src = '/placeholder-image.svg';
+                }}
               />
             )}
             <div className='flex items-start justify-between gap-4'>
@@ -293,6 +299,7 @@ export const Menus = () => {
                 <span className='text-sm font-medium text-slate-700'>Nombre</span>
                 <input
                   type='text'
+                  required
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
@@ -321,6 +328,8 @@ export const Menus = () => {
                 <input
                   type='number'
                   step='0.01'
+                  required
+                  min='0'
                   value={form.price}
                   onChange={(event) => setForm({ ...form, price: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
@@ -335,9 +344,23 @@ export const Menus = () => {
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
                 {form.image && (
-                  <p className='mt-2 text-xs text-slate-500'>
-                    {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
-                  </p>
+                  <div className='mt-3 space-y-2'>
+                    <img
+                      src={
+                        form.image instanceof File
+                          ? URL.createObjectURL(form.image)
+                          : resolveCloudinaryImageUrl(form.image)
+                      }
+                      alt='Vista previa del platillo'
+                      className='h-40 w-full rounded-2xl object-cover'
+                      onError={(event) => {
+                        event.currentTarget.src = '/placeholder-image.svg';
+                      }}
+                    />
+                    <p className='text-xs text-slate-500'>
+                      {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
+                    </p>
+                  </div>
                 )}
               </label>
               <div className='sm:col-span-2 flex justify-end gap-3 pt-2'>

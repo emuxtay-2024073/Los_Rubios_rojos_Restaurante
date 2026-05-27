@@ -41,12 +41,10 @@ export const register = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({
       username,
       email,
-      password: hashedPassword,
+      password,
       role: roleDocument._id
     });
 

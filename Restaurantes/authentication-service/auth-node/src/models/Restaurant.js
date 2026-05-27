@@ -5,9 +5,11 @@ const restaurantSchema = new mongoose.Schema({
     address: { type: String, required: true },
     phone: String,
     email: String,
+    city: String,
     capacity: Number,
     openingHours: String,
     manager: String,
+    image: String,
     isDeleted: {
         type: Boolean,
         default: false
