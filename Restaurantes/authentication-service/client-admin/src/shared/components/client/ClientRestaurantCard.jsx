@@ -22,20 +22,25 @@ export const ClientRestaurantCard = ({ restaurant }) => {
         </div>
       )}
       <div className='space-y-4 p-5'>
-        <p className='text-sm text-gray-600'>{restaurant.address || 'Sin dirección registrada'}</p>
+        <p className='text-sm text-gray-600'>{restaurant.address || 'Sin direccion registrada'}</p>
         {restaurant.openingHours && (
           <p className='text-sm text-gray-500'>Horario: {restaurant.openingHours}</p>
         )}
         <div className='flex flex-wrap gap-2 text-xs font-semibold text-gray-700'>
-          <span className='rounded-full bg-surface-soft px-3 py-1'>{restaurant.phone || 'Sin teléfono'}</span>
-          <span className='rounded-full bg-surface-soft px-3 py-1'>{restaurant.capacity ? `${restaurant.capacity} personas` : 'Capacidad flexible'}</span>
+          <span className='rounded-full bg-surface-soft px-3 py-1'>{restaurant.phone || 'Sin telefono'}</span>
+          <span className='rounded-full bg-surface-soft px-3 py-1'>
+            {restaurant.capacity ? `${restaurant.capacity} personas` : 'Capacidad flexible'}
+          </span>
         </div>
         <div className='flex flex-wrap gap-3'>
-          <Link to={`/menu/${restaurant._id}`}>
-            <ClientButton>Ver menú</ClientButton>
+          <Link to={`/cliente/menu/${restaurant._id}`}>
+            <ClientButton>Ver menu</ClientButton>
           </Link>
-          <Link to='/reservations'>
+          <Link to='/cliente/reservations'>
             <ClientButton variant='secondary'>Reservar</ClientButton>
+          </Link>
+          <Link to='/cliente/reviews'>
+            <ClientButton variant='ghost'>Reseña</ClientButton>
           </Link>
         </div>
       </div>

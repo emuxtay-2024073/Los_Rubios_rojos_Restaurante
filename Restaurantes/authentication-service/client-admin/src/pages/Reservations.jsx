@@ -112,6 +112,7 @@ export const Reservations = () => {
             <thead className='bg-slate-50 text-sm text-slate-600'>
               <tr>
                 <th className='px-5 py-4'>Cliente</th>
+                <th className='px-5 py-4'>Contacto</th>
                 <th className='px-5 py-4'>Mesa</th>
                 <th className='px-5 py-4'>Fecha</th>
                 <th className='px-5 py-4'>Invitados</th>
@@ -122,6 +123,10 @@ export const Reservations = () => {
               {filteredReservations.map((reservation) => (
                 <tr key={reservation._id} className='border-t border-gray-100 hover:bg-slate-50'>
                   <td className='px-5 py-4'>{reservation.customerName}</td>
+                  <td className='px-5 py-4'>
+                    <p>{reservation.customerEmail || 'Sin correo'}</p>
+                    <p className='text-xs text-gray-500'>{reservation.customerPhone || 'Sin telefono'}</p>
+                  </td>
                   <td className='px-5 py-4'>{reservation.table?.number ?? reservation.table}</td>
                   <td className='px-5 py-4'>{formatDate(reservation.reservationDate)}</td>
                   <td className='px-5 py-4'>{reservation.numberOfGuests ?? '—'}</td>
@@ -134,7 +139,7 @@ export const Reservations = () => {
               ))}
               {filteredReservations.length === 0 && (
                 <tr>
-                  <td colSpan='5' className='px-5 py-8 text-center text-sm text-gray-500'>
+                  <td colSpan='6' className='px-5 py-8 text-center text-sm text-gray-500'>
                     No hay reservaciones registradas.
                   </td>
                 </tr>

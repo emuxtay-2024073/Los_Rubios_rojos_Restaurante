@@ -87,7 +87,7 @@ export const ClientPage = () => {
             <p className='text-sm font-semibold uppercase tracking-[0.25em] text-main-blue'>Destacados</p>
             <h2 className='mt-1 text-2xl font-bold text-gray-900'>Restaurantes para comenzar</h2>
           </div>
-          <Link to='/restaurants' className='text-sm font-semibold text-main-blue hover:underline'>
+          <Link to='/cliente/restaurants' className='text-sm font-semibold text-main-blue hover:underline'>
             Ver todos
           </Link>
         </div>

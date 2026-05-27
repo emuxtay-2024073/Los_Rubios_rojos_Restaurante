@@ -97,6 +97,11 @@ export const getReviewsForRestaurant = async (restaurantId) => {
   return normalizeResponse(data, 'reviews');
 };
 
+export const createReviewForRestaurant = async (restaurantId, payload) => {
+  const { data } = await axiosAdmin.post(`/restaurants/${restaurantId}/reviews`, payload);
+  return data;
+};
+
 export const getReservationsForRestaurant = async (restaurantId) => {
   const { data } = await axiosAdmin.get(`/restaurants/${restaurantId}/reservations`);
   return normalizeResponse(data, 'reservations');
