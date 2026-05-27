@@ -1,5 +1,7 @@
 using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
+using AuthService.Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,12 +18,14 @@ public class AuthController : ControllerBase
     private readonly IAuthService _auth;
     private readonly IConfiguration _configuration;
     private readonly IJwtService _jwt;
+    private readonly IUserRepository _users;
 
-    public AuthController(IAuthService auth, IConfiguration configuration, IJwtService jwt)
+    public AuthController(IAuthService auth, IConfiguration configuration, IJwtService jwt, IUserRepository users)
     {
         _auth = auth;
         _configuration = configuration;
         _jwt = jwt;
+        _users = users;
     }
 
     // ========================= LOGIN =========================
@@ -84,6 +88,33 @@ public class AuthController : ControllerBase
     {
         var result = await _auth.Register(dto);
         return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    // ========================= USERS =========================
+    /// <summary>
+    /// Lista los usuarios registrados. Requiere un token de administrador.
+    /// </summary>
+    /// <returns>Usuarios registrados.</returns>
+    [Authorize(Roles = "ADMIN")]
+    [HttpGet("users")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _users.GetAll();
+
+        return Ok(new
+        {
+            users = users.Select(user => new UserResponseDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                EmailConfirmed = user.EmailConfirmed
+            })
+        });
     }
 
     // ========================= VERIFY EMAIL =========================

@@ -98,7 +98,7 @@ export const FieldModal = ({ isOpen, onClose, field }) => {
                   className='w-full h-full object-cover'
                   alt='Vista previa de cancha'
                   onError={(event) => {
-                    event.currentTarget.src = '/placeholder-image.png';
+                    event.currentTarget.src = '/placeholder-image.svg';
                   }}
                 />
               ) : (

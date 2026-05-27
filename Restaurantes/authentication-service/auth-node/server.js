@@ -10,6 +10,10 @@ import swaggerJsdoc from "swagger-jsdoc";
 import restaurantRoutes from "./src/routes/restaurant.routes.js";
 import menuItemRoutes from "./src/routes/menuItem.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
+import authRoutes from "./src/routes/auth.routes.js";
+import userRoutes from "./src/routes/user.routes.js";
+import roleRoutes from "./src/routes/role.routes.js";
+import tableRoutes from "./src/routes/table.routes.js";
 
 // Importar modelos
 import Restaurant from "./src/models/Restaurant.js";
@@ -161,8 +165,40 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use("/restaurants", restaurantRoutes);
 app.use("/menu-items", menuItemRoutes);
 app.use("/orders", orderRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/tables", tableRoutes);
 
-app.listen(3000, () => {
-    console.log("Servidor en http://localhost:3000");
-    console.log("Swagger UI disponible en: http://localhost:3000/api-docs");
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error("Error:", err.message);
+    console.error(err.stack);
+    res.status(500).json({ message: "Error interno del servidor", error: err.message });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Excepción no capturada:', error);
+    process.exit(1);
+});
+
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Rechazo no manejado en:', promise, 'razón:', reason);
+});
+
+const PORT = process.env.PORT || 3000;
+let server = app.listen(PORT, () => {
+    console.log("Servidor en http://localhost:" + PORT);
+    console.log("Swagger UI disponible en: http://localhost:" + PORT + "/api-docs");
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM recibido, cerrando servidor...');
+    server.close(() => {
+        console.log('Servidor cerrado');
+        process.exit(0);
+    });
 });

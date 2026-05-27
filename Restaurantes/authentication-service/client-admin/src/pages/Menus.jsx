@@ -169,7 +169,7 @@ export const Menus = () => {
       loadMenuItems(selectedRestaurantId);
     } catch (error) {
       console.error(error);
-      showError('No se pudo guardar el elemento de menú');
+      showError(error.response?.data?.message || 'No se pudo guardar el elemento de menú');
     }
   };
 
@@ -365,8 +365,7 @@ export const Menus = () => {
                 <input
                   type='number'
                   step='0.01'
-                  min='0.01'
-                  required
+
                   value={form.price}
                   onChange={(event) => setForm({ ...form, price: event.target.value })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'

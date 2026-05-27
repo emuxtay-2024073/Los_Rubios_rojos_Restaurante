@@ -76,7 +76,7 @@ export const Fields = () => {
                 alt={field.fieldName}
                 className='max-h-full max-w-full object-contain rounded-t-xl'
                 onError={(event) => {
-                  event.currentTarget.src = '/placeholder-image.png';
+                  event.currentTarget.src = '/placeholder-image.svg';
                 }}
               />
             </div>

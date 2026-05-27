@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 export const RegisterForm = ({ onLogin }) => {
   const [successMessage, setSuccessMessage] = useState('');
+  const [verificationUrl, setVerificationUrl] = useState('');
   const registerUser = useAuthStore((state) => state.register);
   const loading = useAuthStore((state) => state.loading);
   const error = useAuthStore((state) => state.error);
@@ -32,11 +33,25 @@ export const RegisterForm = ({ onLogin }) => {
       secretKey: data.secretKey || '',
     };
 
+    setVerificationUrl('');
+
     const res = await registerUser(payload);
     if (res.success) {
-      setSuccessMessage('Registrado exitosamente. Puedes iniciar sesión ahora.');
-      toast.success('Registrado exitosamente.', { duration: 3000 });
-      setTimeout(() => onLogin(), 1500);
+      const link = res.data?.verificationUrl || '';
+      const message =
+        res.data?.message ||
+        'Registrado exitosamente. Revisa tu correo para verificar tu cuenta.';
+
+      setSuccessMessage(message);
+      setVerificationUrl(link);
+
+      if (link) {
+        toast.success('Cuenta creada. Usa el enlace de verificacion mostrado.', { duration: 4000 });
+        return;
+      }
+
+      toast.success('Revisa tu correo para verificar tu cuenta.', { duration: 3000 });
+      setTimeout(() => onLogin(), 2500);
     }
   };
 
@@ -151,6 +166,17 @@ export const RegisterForm = ({ onLogin }) => {
       {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
       {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
       {successMessage && <p className='text-green-600 text-sm text-center'>{successMessage}</p>}
+      {verificationUrl && (
+        <div className='rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center text-sm text-emerald-900'>
+          <p className='font-semibold'>El correo no llego o esta en desarrollo.</p>
+          <a
+            href={verificationUrl}
+            className='mt-2 inline-flex items-center justify-center rounded-full bg-main-blue px-4 py-2 text-sm font-semibold text-white hover:opacity-90'
+          >
+            Verificar mi cuenta
+          </a>
+        </div>
+      )}
 
       <button
         type='submit'

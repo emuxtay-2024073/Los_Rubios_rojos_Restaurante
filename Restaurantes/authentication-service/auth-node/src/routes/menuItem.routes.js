@@ -7,6 +7,7 @@ import {
     deleteMenuItem
 } from "../controllers/menuItem.controller.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
+import upload from "../middleware/upload.js";
 import { ROLE_ADMIN } from "../utils/roles.js";
 import upload from "../middleware/upload.js";
 

@@ -261,8 +261,7 @@ export const Restaurants = () => {
                   <span className='text-sm font-medium text-slate-700'>{label}</span>
                   <input
                     type={type}
-                    required
-                    min={key === 'capacity' ? '1' : undefined}
+
                     value={form[key] ?? ''}
                     onChange={(event) => setForm({ ...form, [key]: event.target.value })}
                     className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'

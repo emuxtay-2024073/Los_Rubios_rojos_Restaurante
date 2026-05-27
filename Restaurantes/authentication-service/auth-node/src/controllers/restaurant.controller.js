@@ -1,8 +1,37 @@
 import Restaurant from "../models/Restaurant.js";
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs/promises";
+
+const buildRestaurantPayload = async (body, file) => {
+    const payload = {
+        name: body.name?.trim(),
+        address: body.address?.trim(),
+        phone: body.phone?.trim(),
+        email: body.email?.trim(),
+        city: body.city?.trim(),
+        manager: body.manager?.trim(),
+        openingHours: body.openingHours?.trim()
+    };
+
+    if (body.capacity !== undefined && body.capacity !== "") {
+        payload.capacity = Number(body.capacity);
+    }
+
+    if (file) {
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+            folder: process.env.CLOUDINARY_FOLDER || "restaurants"
+        });
+        payload.image = uploadResult.secure_url;
+        await fs.unlink(file.path).catch(() => {});
+    }
+
+    return payload;
+};
 
 export const createRestaurant = async (req, res) => {
     try {
-        const restaurant = await Restaurant.create(req.body);
+        const payload = await buildRestaurantPayload(req.body, req.file);
+        const restaurant = await Restaurant.create(payload);
         res.status(201).json({
             message: "Restaurante creado correctamente",
             restaurant
@@ -41,7 +70,8 @@ export const getRestaurantById = async (req, res) => {
 
 export const updateRestaurant = async (req, res) => {
     try {
-        const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const payload = await buildRestaurantPayload(req.body, req.file);
+        const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
         if (!restaurant) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }

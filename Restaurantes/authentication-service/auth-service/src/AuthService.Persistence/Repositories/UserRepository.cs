@@ -26,6 +26,11 @@ public class UserRepository : IUserRepository
     public Task<User?> GetByResetToken(string token) =>
         _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
 
+    public async Task<IReadOnlyList<User>> GetAll() =>
+        await _context.Users
+            .OrderBy(u => u.Username)
+            .ToListAsync();
+
     public async Task Add(User user)
     {
         _context.Users.Add(user);

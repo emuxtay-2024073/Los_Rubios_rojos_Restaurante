@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
 import {
@@ -65,12 +64,10 @@ export const createUser = async (req, res) => {
             { new: true, upsert: true }
         );
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
         const user = new User({
             username,
             email,
-            password: hashedPassword,
+            password,
             role: roleExists._id
         });
 
