@@ -12,24 +12,17 @@ const emptyRestaurant = {
   city: '',
   manager: '',
   capacity: '',
-  openingHours: '',
+  openingTime: '',
+  closingTime: '',
   image: null,
 };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^[0-9+\-\s()]{8,20}$/;
-const imageMaxSize = 5 * 1024 * 1024;
+const parseHours = (openingHours = '') => {
+  const [openingTime = '', closingTime = ''] = openingHours.split('-').map((value) => value.trim());
+  return { openingTime, closingTime };
+};
 
-const restaurantFields = [
-  { key: 'name', label: 'Nombre', type: 'text' },
-  { key: 'city', label: 'Ciudad', type: 'text' },
-  { key: 'address', label: 'Direccion', type: 'text' },
-  { key: 'manager', label: 'Encargado', type: 'text' },
-  { key: 'phone', label: 'Telefono', type: 'text' },
-  { key: 'email', label: 'Correo electronico', type: 'email' },
-  { key: 'capacity', label: 'Capacidad', type: 'number' },
-  { key: 'openingHours', label: 'Horario de atencion', type: 'text' },
-];
+const isImageFileValid = (file) => !file || (file.type?.startsWith('image/') && file.size <= 5 * 1024 * 1024);
 
 export const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -38,7 +31,7 @@ export const Restaurants = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRestaurant, setActiveRestaurant] = useState(null);
   const [form, setForm] = useState(emptyRestaurant);
-  const [formErrors, setFormErrors] = useState({});
+  const [errors, setErrors] = useState({});
 
   const loadRestaurants = async () => {
     try {
@@ -59,50 +52,58 @@ export const Restaurants = () => {
 
   const filteredRestaurants = useMemo(
     () =>
-      restaurants.filter((restaurant) =>
-        restaurant.name?.toLowerCase().includes(search.toLowerCase()) ||
-        restaurant.city?.toLowerCase().includes(search.toLowerCase()) ||
-        restaurant.address?.toLowerCase().includes(search.toLowerCase()),
-      ),
+      restaurants.filter((restaurant) => {
+        const query = search.toLowerCase();
+        return (
+          restaurant.name?.toLowerCase().includes(query) ||
+          restaurant.city?.toLowerCase().includes(query) ||
+          restaurant.address?.toLowerCase().includes(query)
+        );
+      }),
     [restaurants, search],
   );
 
-  const validateRestaurant = () => {
-    const errors = {};
+  const validate = () => {
+    const nextErrors = {};
     const capacity = Number(form.capacity);
 
-    if (!form.name.trim()) errors.name = 'El nombre es obligatorio.';
-    if (form.name.trim() && form.name.trim().length < 3) errors.name = 'Minimo 3 caracteres.';
-    if (!form.city.trim()) errors.city = 'La ciudad es obligatoria.';
-    if (!form.address.trim()) errors.address = 'La direccion es obligatoria.';
-    if (!form.manager.trim()) errors.manager = 'El encargado es obligatorio.';
-    if (!form.phone.trim()) errors.phone = 'El telefono es obligatorio.';
-    if (form.phone.trim() && !phonePattern.test(form.phone.trim())) errors.phone = 'Telefono invalido.';
-    if (!form.email.trim()) errors.email = 'El correo es obligatorio.';
-    if (form.email.trim() && !emailPattern.test(form.email.trim())) errors.email = 'Correo invalido.';
-    if (!form.capacity || Number.isNaN(capacity) || capacity < 1) errors.capacity = 'Capacidad minima: 1.';
-    if (capacity > 1000) errors.capacity = 'Capacidad demasiado alta.';
-    if (!form.openingHours.trim()) errors.openingHours = 'El horario es obligatorio.';
-    if (!form.image) errors.image = 'La imagen es obligatoria.';
-
-    if (form.image instanceof File) {
-      if (!form.image.type.startsWith('image/')) errors.image = 'Selecciona un archivo de imagen.';
-      if (form.image.size > imageMaxSize) errors.image = 'La imagen no debe superar 5 MB.';
+    if (!form.name.trim()) nextErrors.name = 'El nombre es obligatorio.';
+    if (!form.address.trim()) nextErrors.address = 'La direccion es obligatoria.';
+    if (!form.city.trim()) nextErrors.city = 'La ciudad es obligatoria.';
+    if (!form.phone.trim()) nextErrors.phone = 'El telefono es obligatorio.';
+    if (!form.email.trim()) nextErrors.email = 'El correo es obligatorio.';
+    if (!form.manager.trim()) nextErrors.manager = 'El encargado es obligatorio.';
+    if (!form.capacity || Number.isNaN(capacity) || capacity < 1) nextErrors.capacity = 'Capacidad minima: 1.';
+    if (!form.openingTime) nextErrors.openingTime = 'La hora de apertura es obligatoria.';
+    if (!form.closingTime) nextErrors.closingTime = 'La hora de cierre es obligatoria.';
+    if (form.openingTime && form.closingTime && form.openingTime >= form.closingTime) {
+      nextErrors.closingTime = 'La hora de cierre debe ser posterior a la apertura.';
+    }
+    if (!activeRestaurant && !form.image) nextErrors.image = 'La imagen es obligatoria.';
+    if (form.image instanceof File && !isImageFileValid(form.image)) {
+      nextErrors.image = 'La imagen debe ser valida y pesar maximo 5 MB.';
     }
 
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleOpenModal = (restaurant = null) => {
+    const hours = parseHours(restaurant?.openingHours);
     setActiveRestaurant(restaurant);
-    setFormErrors({});
+    setErrors({});
     setForm(
       restaurant
         ? {
-            ...restaurant,
+            name: restaurant.name || '',
+            address: restaurant.address || '',
+            phone: restaurant.phone || '',
+            email: restaurant.email || '',
+            city: restaurant.city || '',
+            manager: restaurant.manager || '',
             capacity: restaurant.capacity ?? '',
-            openingHours: restaurant.openingHours ?? '',
+            openingTime: hours.openingTime,
+            closingTime: hours.closingTime,
             image: restaurant.image || null,
           }
         : emptyRestaurant,
@@ -112,7 +113,7 @@ export const Restaurants = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!validateRestaurant()) {
+    if (!validate()) {
       showError('Revisa los campos del restaurante');
       return;
     }
@@ -126,7 +127,7 @@ export const Restaurants = () => {
         city: form.city.trim(),
         manager: form.manager.trim(),
         capacity: Number(form.capacity),
-        openingHours: form.openingHours.trim(),
+        openingHours: `${form.openingTime} - ${form.closingTime}`,
       };
 
       let payload = payloadData;
@@ -153,14 +154,14 @@ export const Restaurants = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Eliminar este restaurante?')) return;
+    if (!window.confirm('Desactivar este restaurante?')) return;
     try {
       await deleteRestaurant(id);
-      showSuccess('Restaurante eliminado');
+      showSuccess('Restaurante desactivado');
       await loadRestaurants();
     } catch (error) {
       console.error(error);
-      showError('No se pudo eliminar el restaurante');
+      showError('No se pudo desactivar el restaurante');
     }
   };
 
@@ -224,21 +225,16 @@ export const Restaurants = () => {
                 onClick={() => handleDelete(restaurant._id)}
                 className='rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700'
               >
-                Eliminar
+                Desactivar
               </button>
             </div>
           </article>
         ))}
-        {filteredRestaurants.length === 0 && (
-          <div className='col-span-full rounded-3xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm'>
-            No se encontro ningun restaurante.
-          </div>
-        )}
       </div>
 
       {modalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
-          <div className='w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4'>
+          <div className='max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl'>
             <div className='flex items-center justify-between gap-4'>
               <div>
                 <p className='text-sm text-gray-500'>Formulario</p>
@@ -256,19 +252,52 @@ export const Restaurants = () => {
             </div>
 
             <form onSubmit={handleSubmit} className='mt-6 grid gap-4 sm:grid-cols-2'>
-              {restaurantFields.map(({ key, label, type }) => (
+              {[
+                ['name', 'Nombre', 'text'],
+                ['city', 'Ciudad', 'text'],
+                ['address', 'Direccion', 'text'],
+                ['manager', 'Encargado', 'text'],
+                ['phone', 'Telefono', 'text'],
+                ['email', 'Correo electronico', 'email'],
+                ['capacity', 'Capacidad', 'number'],
+              ].map(([key, label, type]) => (
                 <label key={key} className='block'>
                   <span className='text-sm font-medium text-slate-700'>{label}</span>
                   <input
                     type={type}
-
+                    required
+                    min={key === 'capacity' ? '1' : undefined}
                     value={form[key] ?? ''}
                     onChange={(event) => setForm({ ...form, [key]: event.target.value })}
                     className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                   />
-                  {formErrors[key] && <p className='mt-1 text-xs text-red-600'>{formErrors[key]}</p>}
+                  {errors[key] && <p className='mt-1 text-xs text-red-600'>{errors[key]}</p>}
                 </label>
               ))}
+
+              <label className='block'>
+                <span className='text-sm font-medium text-slate-700'>Hora de apertura</span>
+                <input
+                  type='time'
+                  required
+                  value={form.openingTime}
+                  onChange={(event) => setForm({ ...form, openingTime: event.target.value })}
+                  className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                />
+                {errors.openingTime && <p className='mt-1 text-xs text-red-600'>{errors.openingTime}</p>}
+              </label>
+
+              <label className='block'>
+                <span className='text-sm font-medium text-slate-700'>Hora de cierre</span>
+                <input
+                  type='time'
+                  required
+                  value={form.closingTime}
+                  onChange={(event) => setForm({ ...form, closingTime: event.target.value })}
+                  className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                />
+                {errors.closingTime && <p className='mt-1 text-xs text-red-600'>{errors.closingTime}</p>}
+              </label>
 
               <label className='block sm:col-span-2'>
                 <span className='text-sm font-medium text-slate-700'>Imagen del restaurante</span>
@@ -278,19 +307,13 @@ export const Restaurants = () => {
                   onChange={(event) => setForm({ ...form, image: event.target.files?.[0] ?? null })}
                   className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
                 />
+                {errors.image && <p className='mt-1 text-xs text-red-600'>{errors.image}</p>}
                 {form.image && (
                   <div className='mt-3 space-y-2'>
                     <img
-                      src={
-                        form.image instanceof File
-                          ? URL.createObjectURL(form.image)
-                          : resolveCloudinaryImageUrl(form.image)
-                      }
+                      src={form.image instanceof File ? URL.createObjectURL(form.image) : resolveCloudinaryImageUrl(form.image)}
                       alt='Vista previa del restaurante'
                       className='h-40 w-full rounded-2xl object-cover'
-                      onError={(event) => {
-                        event.currentTarget.src = '/placeholder-image.svg';
-                      }}
                     />
                     <p className='text-xs text-slate-500'>
                       {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}

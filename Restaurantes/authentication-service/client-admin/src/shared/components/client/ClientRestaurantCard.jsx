@@ -34,7 +34,7 @@ export const ClientRestaurantCard = ({ restaurant }) => {
         </div>
         <div className='flex flex-wrap gap-3'>
           <Link to={`/cliente/menu/${restaurant._id}`}>
-            <ClientButton>Ver menu</ClientButton>
+            <ClientButton>Ver menú</ClientButton>
           </Link>
           <Link to='/cliente/reservations'>
             <ClientButton variant='secondary'>Reservar</ClientButton>

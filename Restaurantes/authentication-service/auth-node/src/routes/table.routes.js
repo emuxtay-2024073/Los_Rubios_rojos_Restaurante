@@ -77,4 +77,8 @@ router.post("/", controller.createTable);
  */
 router.get("/", controller.getTables);
 
+router.put("/:id", controller.updateTable);
+
+router.delete("/:id", controller.deleteTable);
+
 export default router;

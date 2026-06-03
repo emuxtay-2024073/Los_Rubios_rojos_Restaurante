@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getMenuItems, getRestaurants } from '../../services/clientApi.js';
+import { getMenuItemsByRestaurant, getRestaurants } from '../../services/clientApi.js';
 import { ClientMenuCard } from '../../shared/components/client/ClientMenuCard.jsx';
 import CartDrawer from '../../shared/components/client/CartDrawer.jsx';
 import useCartStore from '../../features/cart/store/cartStore.js';
@@ -18,7 +18,10 @@ export const ClientMenuPage = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const [restaurantsData, menuItemsData] = await Promise.all([getRestaurants(), getMenuItems()]);
+        const [restaurantsData, menuItemsData] = await Promise.all([
+          getRestaurants(),
+          getMenuItemsByRestaurant(restaurantId),
+        ]);
         setRestaurants(Array.isArray(restaurantsData) ? restaurantsData : []);
         setMenuItems(Array.isArray(menuItemsData) ? menuItemsData : []);
       } catch {
@@ -36,14 +39,7 @@ export const ClientMenuPage = () => {
     [restaurants, restaurantId],
   );
 
-  const restaurantMenu = useMemo(
-    () =>
-      menuItems.filter((item) => {
-        const itemRestaurant = item.restaurant?._id ?? item.restaurant ?? item.restaurantId;
-        return String(itemRestaurant) === String(restaurantId);
-      }),
-    [menuItems, restaurantId],
-  );
+  const restaurantMenu = useMemo(() => menuItems, [menuItems]);
 
   return (
     <div className='space-y-8'>

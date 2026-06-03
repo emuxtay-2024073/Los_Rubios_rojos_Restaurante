@@ -18,8 +18,12 @@ const tableSchema = new mongoose.Schema({
         type: String,
         enum: ["disponible", "no disponible"],
         default: "disponible"
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
-});
+}, { timestamps: true });
 
 // Índice único para number por restaurant
 tableSchema.index({ number: 1, restaurant: 1 }, { unique: true });

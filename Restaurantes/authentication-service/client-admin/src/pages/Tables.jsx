@@ -125,16 +125,16 @@ export const Tables = () => {
   };
 
   const handleDelete = async (table) => {
-    const confirmed = window.confirm('¿Eliminar esta mesa?');
+    const confirmed = window.confirm('¿Desactivar esta mesa?');
     if (!confirmed) return;
 
     try {
       await deleteTableForRestaurant(selectedRestaurantId, table._id);
-      showSuccess('Mesa eliminada');
+      showSuccess('Mesa desactivada');
       loadTables(selectedRestaurantId);
     } catch (error) {
       console.error(error);
-      showError('No se pudo eliminar la mesa');
+      showError('No se pudo desactivar la mesa');
     }
   };
 
@@ -223,7 +223,7 @@ export const Tables = () => {
                       onClick={() => handleDelete(table)}
                       className='rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700'
                     >
-                      Eliminar
+                      Desactivar
                     </button>
                   </div>
                 </td>

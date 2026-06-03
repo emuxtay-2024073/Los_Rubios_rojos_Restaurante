@@ -1,15 +1,25 @@
 import Order from "../models/Order.js";
 import MenuItem from "../models/MenuItem.js";
+import Table from "../models/Table.js";
 
 
 export const createOrder = async (req, res) => {
     try {
         const { table, items } = req.body;
 
+        if (!table || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: "La mesa y los productos son obligatorios" });
+        }
+
+        const existingTable = await Table.findOne({ _id: table, isDeleted: { $ne: true } });
+        if (!existingTable) {
+            return res.status(404).json({ error: "Mesa no encontrada" });
+        }
+
         let total = 0;
 
         const detailedItems = await Promise.all(items.map(async (item) => {
-            const menuItem = await MenuItem.findById(item.menuItem);
+            const menuItem = await MenuItem.findOne({ _id: item.menuItem, isDeleted: { $ne: true } });
 
             if (!menuItem) {
                 throw new Error("Producto no encontrado");
@@ -32,6 +42,7 @@ export const createOrder = async (req, res) => {
         });
 
         await order.save();
+        await Table.findByIdAndUpdate(table, { status: "no disponible" });
 
         res.status(201).json(order);
 

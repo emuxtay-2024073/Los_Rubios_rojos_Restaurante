@@ -174,16 +174,16 @@ export const Menus = () => {
   };
 
   const handleDelete = async (item) => {
-    const confirmed = window.confirm('¿Eliminar este platillo?');
+    const confirmed = window.confirm('¿Desactivar este platillo?');
     if (!confirmed) return;
 
     try {
       await deleteMenuItem(item._id);
-      showSuccess('Platillo eliminado');
+      showSuccess('Platillo desactivado');
       loadMenuItems(selectedRestaurantId);
     } catch (error) {
       console.error(error);
-      showError('No se pudo eliminar el platillo');
+      showError('No se pudo desactivar el platillo');
     }
   };
 
@@ -292,7 +292,7 @@ export const Menus = () => {
                 onClick={() => handleDelete(item)}
                 className='rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700'
               >
-                Eliminar
+                Desactivar
               </button>
             </div>
           </article>
@@ -305,8 +305,8 @@ export const Menus = () => {
       </div>
 
       {menuModalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'>
-          <div className='w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4'>
+          <div className='max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl'>
             <div className='flex items-center justify-between gap-4'>
               <div>
                 <p className='text-sm text-gray-500'>Formulario de platillo</p>
