@@ -60,6 +60,9 @@ export const ClientMenuPage = () => {
             <Link to='/cliente/reservations'>
               <ClientButton>Reservar mesa</ClientButton>
             </Link>
+            <Link to='/cliente/reviews'>
+              <ClientButton variant='ghost'>Dejar reseña</ClientButton>
+            </Link>
           </div>
         </div>
       </section>

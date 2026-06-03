@@ -1,12 +1,13 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import imgLogo from '../../../assets/img/los_rubios_rojos_logo.svg';
 import { useAuthStore } from '../../../features/auth/store/authStore.js';
-import { useEffect, useRef, useState } from 'react';
 
 const navItems = [
   { label: 'Restaurantes', to: '/cliente/restaurants' },
   { label: 'Reservas', to: '/cliente/reservations' },
-  { label: 'Órdenes', to: '/cliente/orders' },
+  { label: 'Reseñas', to: '/cliente/reviews' },
+  { label: 'Ordenes', to: '/cliente/orders' },
 ];
 
 export const ClientNavbar = () => {
@@ -17,8 +18,8 @@ export const ClientNavbar = () => {
   const ref = useRef();
 
   useEffect(() => {
-    const onDoc = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const onDoc = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) setOpen(false);
     };
     document.addEventListener('click', onDoc);
     return () => document.removeEventListener('click', onDoc);
@@ -42,13 +43,11 @@ export const ClientNavbar = () => {
 
         <nav className='hidden gap-2 md:flex'>
           <NavLink
-            to={'/cliente'}
+            to='/cliente'
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className={({ isActive }) =>
               `rounded-full px-4 py-2 text-sm font-medium transition ${
-                isActive
-                  ? 'bg-main-blue text-white shadow-sm'
-                  : 'text-gray-700 hover:bg-surface-soft hover:text-main-blue'
+                isActive ? 'bg-main-blue text-white shadow-sm' : 'text-gray-700 hover:bg-surface-soft hover:text-main-blue'
               }`
             }
           >
@@ -61,9 +60,7 @@ export const ClientNavbar = () => {
               to={item.to}
               className={({ isActive }) =>
                 `rounded-full px-4 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? 'bg-main-blue text-white shadow-sm'
-                    : 'text-gray-700 hover:bg-surface-soft hover:text-main-blue'
+                  isActive ? 'bg-main-blue text-white shadow-sm' : 'text-gray-700 hover:bg-surface-soft hover:text-main-blue'
                 }`
               }
             >
@@ -75,11 +72,12 @@ export const ClientNavbar = () => {
         <div className='relative' ref={ref}>
           {user ? (
             <button
-              onClick={() => setOpen((s) => !s)}
-              className='inline-flex items-center gap-3 rounded-full border border-main-blue px-4 py-2 text-sm font-semibold text-main-blue bg-white'
+              type='button'
+              onClick={() => setOpen((state) => !state)}
+              className='inline-flex items-center gap-3 rounded-full border border-main-blue bg-white px-4 py-2 text-sm font-semibold text-main-blue'
             >
               <span className='hidden sm:inline'>{user.username || user.email || 'Usuario'}</span>
-              <svg className='w-4 h-4' viewBox='0 0 20 20' fill='currentColor' aria-hidden>
+              <svg className='h-4 w-4' viewBox='0 0 20 20' fill='currentColor' aria-hidden>
                 <path fillRule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clipRule='evenodd' />
               </svg>
             </button>
@@ -89,10 +87,11 @@ export const ClientNavbar = () => {
             <div className='absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5'>
               <div className='py-1'>
                 <button
+                  type='button'
                   onClick={handleLogout}
-                  className='w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50'
+                  className='w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50'
                 >
-                  Cerrar sesión
+                  Cerrar sesion
                 </button>
               </div>
             </div>

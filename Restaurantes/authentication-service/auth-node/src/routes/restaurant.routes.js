@@ -13,6 +13,7 @@ import Review from "../models/Review.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.js";
 import { ROLE_ADMIN, ROLE_CLIENTE } from "../utils/roles.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -355,9 +356,18 @@ router.get("/:restaurantId/reservations", async (req, res) => {
  */
 router.post("/:restaurantId/reviews", verifyToken, verifyRole(ROLE_CLIENTE), async (req, res) => {
     try {
+        const rating = Number(req.body.rating);
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: "La calificacion debe estar entre 1 y 5" });
+        }
+
         const review = await Review.create({
             ...req.body,
-            restaurant: req.params.restaurantId
+            rating,
+            restaurant: req.params.restaurantId,
+            customerName: req.body.customerName || req.user?.username,
+            customerEmail: req.body.customerEmail || req.user?.email
         });
         res.status(201).json(review);
     } catch (error) {
