@@ -31,10 +31,10 @@ export const ClientRestaurantCard = ({ restaurant }) => {
           <span className='rounded-full bg-surface-soft px-3 py-1'>{restaurant.capacity ? `${restaurant.capacity} personas` : 'Capacidad flexible'}</span>
         </div>
         <div className='flex flex-wrap gap-3'>
-          <Link to={`/menu/${restaurant._id}`}>
+          <Link to={`/cliente/menu/${restaurant._id}`}>
             <ClientButton>Ver menú</ClientButton>
           </Link>
-          <Link to='/reservations'>
+          <Link to='/cliente/reservations'>
             <ClientButton variant='secondary'>Reservar</ClientButton>
           </Link>
         </div>

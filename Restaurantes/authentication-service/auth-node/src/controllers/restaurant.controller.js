@@ -43,7 +43,7 @@ export const createRestaurant = async (req, res) => {
 
 export const getRestaurants = async (req, res) => {
     try {
-        const restaurants = await Restaurant.find({ isDeleted: false });
+        const restaurants = await Restaurant.find({ isDeleted: { $ne: true } });
         res.json({
             message: "Restaurantes obtenidos correctamente",
             restaurants
@@ -55,7 +55,7 @@ export const getRestaurants = async (req, res) => {
 
 export const getRestaurantById = async (req, res) => {
     try {
-        const restaurant = await Restaurant.findById(req.params.id);
+        const restaurant = await Restaurant.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
         if (!restaurant) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
@@ -71,7 +71,11 @@ export const getRestaurantById = async (req, res) => {
 export const updateRestaurant = async (req, res) => {
     try {
         const payload = await buildRestaurantPayload(req.body, req.file);
-        const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
+        const restaurant = await Restaurant.findOneAndUpdate(
+            { _id: req.params.id, isDeleted: { $ne: true } },
+            payload,
+            { new: true, runValidators: true }
+        );
         if (!restaurant) {
             return res.status(404).json({ message: "Restaurante no encontrado" });
         }
@@ -86,10 +90,15 @@ export const updateRestaurant = async (req, res) => {
 
 export const deleteRestaurant = async (req, res) => {
     try {
-        await Restaurant.findByIdAndUpdate(req.params.id, {
-            isDeleted: true
-        });
-        res.json({ message: "Restaurante eliminado correctamente (soft delete)" });
+        const restaurant = await Restaurant.findOneAndUpdate(
+            { _id: req.params.id, isDeleted: { $ne: true } },
+            { isDeleted: true },
+            { new: true }
+        );
+        if (!restaurant) {
+            return res.status(404).json({ message: "Restaurante no encontrado" });
+        }
+        res.json({ message: "Restaurante desactivado correctamente", restaurant });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

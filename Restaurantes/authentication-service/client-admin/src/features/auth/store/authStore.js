@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { login as loginRequest, register as registerRequest } from '../../../shared/apis';
 
-
 const parseJwt = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -30,9 +29,9 @@ export const useAuthStore = create(
       error: null,
       isLoadingAuth: true,
       isAuthenticated: false,
+
       checkAuth: () => {
         const token = get().token;
-        // If a token exists, treat the user as authenticated for client or admin flows.
         set({
           isLoadingAuth: false,
           isAuthenticated: Boolean(token),
@@ -61,9 +60,13 @@ export const useAuthStore = create(
           const token = data?.token;
 
           if (!token) {
-            const message = data?.message || 'Error al iniciar sesión';
+            const message = data?.message || 'Error al iniciar sesion';
             set({ error: message, loading: false });
-            return { success: false, error: message };
+            return {
+              success: false,
+              error: message,
+              verificationUrl: data?.verificationUrl,
+            };
           }
 
           const claims = parseJwt(token) || {};
@@ -93,13 +96,20 @@ export const useAuthStore = create(
             isAuthenticated: true,
             loading: false,
           });
+
           return { success: true, role };
         } catch (err) {
-      console.error(err);
-      const message = err?.response?.data?.message || err?.message || 'Error al iniciar sesión';
-          console.error('Login error:', err);
+          const responseData = err?.response?.data;
+          const isBadCredentials = err?.response?.status === 401 && !responseData?.verificationUrl;
+          const message = isBadCredentials
+            ? 'Correo o contrasena incorrectos.'
+            : responseData?.message || err?.message || 'Error al iniciar sesion';
           set({ error: message, loading: false });
-          return { success: false, error: message };
+          return {
+            success: false,
+            error: message,
+            verificationUrl: responseData?.verificationUrl,
+          };
         }
       },
 
@@ -114,8 +124,7 @@ export const useAuthStore = create(
             data,
           };
         } catch (err) {
-      console.error(err);
-      const message = err.response?.data?.message || 'Error al registrar usuario';
+          const message = err.response?.data?.message || 'Error al registrar usuario';
           set({ error: message, loading: false });
           return { success: false, error: message };
         }
@@ -137,6 +146,6 @@ export const useAuthStore = create(
           state.isLoadingAuth = false;
         }
       },
-    }
-  )
+    },
+  ),
 );

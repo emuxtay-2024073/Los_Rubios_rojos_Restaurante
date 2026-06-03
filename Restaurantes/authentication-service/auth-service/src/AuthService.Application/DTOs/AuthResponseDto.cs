@@ -33,12 +33,13 @@ public class AuthResponseDto
         };
     }
 
-    public static AuthResponseDto Fail(string message)
+    public static AuthResponseDto Fail(string message, string? verificationUrl = null)
     {
         return new AuthResponseDto
         {
             Success = false,
-            Message = message
+            Message = message,
+            VerificationUrl = verificationUrl
         };
     }
 }

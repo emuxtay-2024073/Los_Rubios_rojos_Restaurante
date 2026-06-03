@@ -33,7 +33,19 @@ public class AuthService : IAuthService
             return AuthResponseDto.Fail("Credenciales invalidas");
 
         if (!user.EmailConfirmed)
-            return AuthResponseDto.Fail("Email no verificado. Revisa tu correo y confirma tu cuenta.");
+        {
+            var exposeVerificationLink =
+                bool.TryParse(_configuration["AppSettings:ExposeVerificationLink"], out var exposeLink) && exposeLink;
+            var verificationUrl =
+                exposeVerificationLink && !string.IsNullOrWhiteSpace(user.EmailVerificationToken)
+                    ? $"{NormalizeFrontendUrl(_configuration["AppSettings:FrontendUrl"])}/verify-email?token={user.EmailVerificationToken}"
+                    : null;
+
+            return AuthResponseDto.Fail(
+                "Email no verificado. Verifica tu cuenta antes de iniciar sesion.",
+                verificationUrl
+            );
+        }
 
         var token = _jwt.GenerateToken(user);
 

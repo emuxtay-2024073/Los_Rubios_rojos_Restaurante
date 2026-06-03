@@ -7,7 +7,7 @@ import {
     deleteRestaurant
 } from "../controllers/restaurant.controller.js";
 import { createReservation } from "../controllers/reservation.controller.js";
-import { createTable, getTables } from "../controllers/tableController.js";
+import { createTable, deleteTable, getTables, updateTable } from "../controllers/tableController.js";
 import Reservation from "../models/Reservation.js";
 import Review from "../models/Review.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
@@ -231,6 +231,15 @@ router.post("/:restaurantId/tables", verifyToken, verifyRole(ROLE_ADMIN), async 
 router.get("/:restaurantId/tables", async (req, res) => {
     req.query.restaurant = req.params.restaurantId;
     await getTables(req, res);
+});
+
+router.put("/:restaurantId/tables/:tableId", verifyToken, verifyRole(ROLE_ADMIN), async (req, res) => {
+    req.body.restaurant = req.params.restaurantId;
+    await updateTable(req, res);
+});
+
+router.delete("/:restaurantId/tables/:tableId", verifyToken, verifyRole(ROLE_ADMIN), async (req, res) => {
+    await deleteTable(req, res);
 });
 
 /**

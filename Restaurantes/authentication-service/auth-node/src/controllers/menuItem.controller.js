@@ -31,7 +31,7 @@ export const createMenuItem = async (req, res) => {
         const payload = await buildMenuItemPayload(req.body, req.file);
         const { restaurant } = payload;
 
-        const existingRestaurant = await Restaurant.findById(restaurant);
+        const existingRestaurant = await Restaurant.findOne({ _id: restaurant, isDeleted: { $ne: true } });
         if (!existingRestaurant) {
             return res.status(404).json({
                 message: "El restaurante no existe"
@@ -52,10 +52,10 @@ export const createMenuItem = async (req, res) => {
 
 export const getMenuItems = async (req, res) => {
     try {
-        const menuItems = await MenuItem.find({ isDeleted: false })
+        const menuItems = await MenuItem.find({ isDeleted: { $ne: true } })
             .populate({
                 path: "restaurant",
-                match: { isDeleted: false }
+                match: { isDeleted: { $ne: true } }
             });
 
         res.json({
@@ -69,7 +69,7 @@ export const getMenuItems = async (req, res) => {
 
 export const getMenuItemsByRestaurant = async (req, res) => {
     try {
-        const menuItems = await MenuItem.find({ restaurant: req.params.restaurantId, isDeleted: false });
+        const menuItems = await MenuItem.find({ restaurant: req.params.restaurantId, isDeleted: { $ne: true } });
         res.json({
             message: "Platillos del restaurante obtenidos correctamente",
             menuItems
@@ -82,7 +82,11 @@ export const getMenuItemsByRestaurant = async (req, res) => {
 export const updateMenuItem = async (req, res) => {
     try {
         const payload = await buildMenuItemPayload(req.body, req.file);
-        const menuItem = await MenuItem.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
+        const menuItem = await MenuItem.findOneAndUpdate(
+            { _id: req.params.id, isDeleted: { $ne: true } },
+            payload,
+            { new: true, runValidators: true }
+        );
         if (!menuItem) {
             return res.status(404).json({ message: "Platillo no encontrado" });
         }
@@ -97,10 +101,15 @@ export const updateMenuItem = async (req, res) => {
 
 export const deleteMenuItem = async (req, res) => {
     try {
-        await MenuItem.findByIdAndUpdate(req.params.id, {
-            isDeleted: true
-        });
-        res.json({ message: "Platillo eliminado correctamente (soft delete)" });
+        const menuItem = await MenuItem.findOneAndUpdate(
+            { _id: req.params.id, isDeleted: { $ne: true } },
+            { isDeleted: true },
+            { new: true }
+        );
+        if (!menuItem) {
+            return res.status(404).json({ message: "Platillo no encontrado" });
+        }
+        res.json({ message: "Platillo desactivado correctamente", menuItem });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

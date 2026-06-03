@@ -44,33 +44,49 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _auth.Login(dto);
-            return result.Success ? Ok(result) : Unauthorized(result);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            var seedLogin = TrySeedAdminLogin(dto);
+            return seedLogin ?? Unauthorized(result);
         }
         catch (Exception)
         {
-            // Fallback development mode: if DB is down or service throws, allow seeded admin login
-            var seedEmail = _configuration["SeedAdmin:Email"];
-            var seedPassword = _configuration["SeedAdmin:Password"];
-            if (!string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword) &&
-                string.Equals(dto.Email, seedEmail, StringComparison.OrdinalIgnoreCase) && dto.Password == seedPassword)
-            {
-                // build a minimal User to generate JWT
-                var user = new AuthService.Domain.Entities.User
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Username = "admin",
-                    Email = seedEmail,
-                    Role = "ADMIN",
-                };
-
-                var token = _jwt.GenerateToken(user);
-                var response = AuthService.Application.DTOs.AuthResponseDto.SuccessResponse("Login exitoso (fallback)", token);
-                return Ok(response);
-            }
+            var seedLogin = TrySeedAdminLogin(dto);
+            if (seedLogin is not null) return seedLogin;
 
             // rethrow as Unauthorized to the client with a generic message
             return Unauthorized(new AuthService.Application.DTOs.AuthResponseDto { Success = false, Message = "Servicio de autenticación no disponible" });
         }
+    }
+
+    private IActionResult? TrySeedAdminLogin(LoginDto dto)
+    {
+        var seedEmail = _configuration["SeedAdmin:Email"];
+        var seedPassword = _configuration["SeedAdmin:Password"];
+
+        if (string.IsNullOrWhiteSpace(seedEmail) ||
+            string.IsNullOrWhiteSpace(seedPassword) ||
+            !string.Equals(dto.Email, seedEmail, StringComparison.OrdinalIgnoreCase) ||
+            dto.Password != seedPassword)
+        {
+            return null;
+        }
+
+        var user = new AuthService.Domain.Entities.User
+        {
+            Id = Guid.NewGuid().ToString(),
+            Username = _configuration["SeedAdmin:Username"] ?? "adminrestaurante",
+            Email = seedEmail,
+            Role = "ADMIN",
+            EmailConfirmed = true,
+        };
+
+        var token = _jwt.GenerateToken(user);
+        var response = AuthResponseDto.SuccessResponse("Login exitoso", token);
+        return Ok(response);
     }
 
     // ========================= REGISTER =========================

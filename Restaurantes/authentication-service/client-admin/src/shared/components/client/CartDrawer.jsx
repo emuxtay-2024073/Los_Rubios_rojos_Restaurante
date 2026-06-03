@@ -1,18 +1,27 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import useCartStore from '../../../features/cart/store/cartStore.js';
 import { resolveCloudinaryImageUrl } from '../../utils/formatters.js';
 
 export const CartDrawer = () => {
   const { items, isOpen, close, removeItem, updateQuantity, subtotal, clear } = useCartStore();
+  const navigate = useNavigate();
+
+  const goToCheckout = () => {
+    close();
+    navigate('/cliente/orders');
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className='fixed right-6 top-16 z-50 w-full max-w-md rounded-2xl bg-white shadow-2xl border border-gray-200'>
+    <div className='fixed inset-x-4 top-20 z-50 ml-auto w-auto max-w-md rounded-2xl border border-gray-200 bg-white shadow-2xl sm:right-6 sm:left-auto sm:w-full'>
       <div className='flex items-center justify-between px-4 py-3 border-b'>
-        <h3 className='text-lg font-semibold'>Carrito</h3>
+        <div>
+          <h3 className='text-lg font-semibold text-slate-900'>Carrito</h3>
+          <p className='text-xs text-gray-500'>{items.length} producto(s) seleccionados</p>
+        </div>
         <div className='flex items-center gap-2'>
-          <button onClick={clear} className='text-sm text-red-600 hover:underline'>Limpiar</button>
+          {items.length > 0 && <button onClick={clear} className='text-sm text-red-600 hover:underline'>Limpiar</button>}
           <button onClick={close} className='rounded-full bg-slate-100 px-3 py-1 text-sm'>Cerrar</button>
         </div>
       </div>
@@ -35,7 +44,7 @@ export const CartDrawer = () => {
                   <button onClick={() => updateQuantity(it._id, (it.qty || 1) - 1)} className='px-2 py-1 rounded-md border'>-</button>
                   <span className='px-3 py-1 rounded-md border bg-slate-50'>{it.qty}</span>
                   <button onClick={() => updateQuantity(it._id, (it.qty || 1) + 1)} className='px-2 py-1 rounded-md border'>+</button>
-                  <button onClick={() => removeItem(it._id)} className='ml-auto text-sm text-red-600'>Eliminar</button>
+                  <button onClick={() => removeItem(it._id)} className='ml-auto text-sm text-red-600'>Quitar</button>
                 </div>
               </div>
             </div>
@@ -48,7 +57,13 @@ export const CartDrawer = () => {
           <span className='font-bold'>Q {Number(subtotal()).toFixed(2)}</span>
         </div>
         <div className='mt-4 flex gap-3'>
-          <button className='flex-1 rounded-full bg-main-blue px-4 py-2 text-sm font-semibold text-white'>Ir a pagar</button>
+          <button
+            onClick={goToCheckout}
+            disabled={items.length === 0}
+            className='flex-1 rounded-full bg-main-blue px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50'
+          >
+            Confirmar pedido
+          </button>
           <button onClick={close} className='rounded-full border border-gray-200 px-4 py-2 text-sm'>Seguir comprando</button>
         </div>
       </div>
