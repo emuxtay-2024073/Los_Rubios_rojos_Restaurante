@@ -9,7 +9,6 @@ import {
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.js";
 import { ROLE_ADMIN } from "../utils/roles.js";
-import upload from "../middleware/upload.js";
 
 const router = express.Router();
 

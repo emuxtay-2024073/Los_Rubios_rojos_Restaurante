@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import { getAllUsers as getAllUsersRequest } from '../../../shared/apis';
+import {
+  createUser as createUserRequest,
+  getAllUsers as getAllUsersRequest,
+  promoteUserToAdmin as promoteUserToAdminRequest,
+} from '../../../shared/apis';
 
 export const useUserManagementStore = create((set, get) => ({
   users: [],
@@ -10,6 +14,34 @@ export const useUserManagementStore = create((set, get) => ({
   setFilters: (filters) => set({ filters }),
 
   setUser: (users) => set({ users }),
+
+  createUser: async (payload) => {
+    try {
+      set({ loading: true, error: null });
+      await createUserRequest(payload);
+      set({ loading: false });
+      await get().getAllUsers(undefined, { force: true });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Error al crear usuario';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  promoteUserToAdmin: async (id) => {
+    try {
+      set({ loading: true, error: null });
+      await promoteUserToAdminRequest(id);
+      set({ loading: false });
+      await get().getAllUsers(undefined, { force: true });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Error al promover usuario';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
 
   getAllUsers: async (apiFn = getAllUsersRequest, options = {}) => {
     try {

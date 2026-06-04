@@ -1,6 +1,9 @@
-import express from "express";
-import { register, login } from "../controllers/auth.controller.js";
-import { verifyToken } from "../middleware/auth.middleware.js";
+﻿import express from "express";
+import { activateAdminRole, register, login, verifyEmail, resendVerification, me } from "../controllers/auth.controller.js";
+import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
+import { rateLimit } from "../middleware/rateLimit.middleware.js";
+import { ROLE_ADMIN } from "../utils/roles.js";
+import { getUsers } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
@@ -8,7 +11,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Auth
- *   description: Autenticación de usuarios
+ *   description: AutenticaciÃ³n de usuarios
  */
 
 /**
@@ -43,7 +46,7 @@ const router = express.Router();
  *               secretKey:
  *                 type: string
  *                 example: string
- *                 description: Requerida sólo si el rol es admin. Para cliente se ignora.
+ *                 description: Requerida sÃ³lo si el rol es admin. Para cliente se ignora.
  *     responses:
  *       201:
  *         description: Usuario registrado correctamente
@@ -52,19 +55,19 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       400:
- *         description: Datos inválidos
+ *         description: Datos invÃ¡lidos
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  */
-router.post("/register", register);
+router.post("/register", rateLimit({ scope: "auth-register", max: 8, windowMs: 60 * 60 * 1000 }), register);
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Iniciar sesión
+ *     summary: Iniciar sesiÃ³n
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -79,7 +82,7 @@ router.post("/register", register);
  *               password:
  *                 type: string
  *                 example: 123456
- *             description: Proporciona email junto con la contraseña.
+ *             description: Proporciona email junto con la contraseÃ±a.
  *     responses:
  *       200:
  *         description: Login exitoso (retorna token JWT)
@@ -94,13 +97,18 @@ router.post("/register", register);
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  */
-router.post("/login", login);
+router.post("/login", rateLimit({ scope: "auth-login", max: 10, windowMs: 15 * 60 * 1000 }), login);
+router.post("/verify-email", rateLimit({ scope: "auth-verify", max: 20, windowMs: 15 * 60 * 1000 }), verifyEmail);
+router.post("/resend-verification", rateLimit({ scope: "auth-resend", max: 4, windowMs: 60 * 60 * 1000 }), resendVerification);
+router.post("/activate-admin", rateLimit({ scope: "auth-admin-activate", max: 10, windowMs: 15 * 60 * 1000 }), activateAdminRole);
+router.get("/users", verifyToken, verifyRole(ROLE_ADMIN), getUsers);
+router.get("/me", verifyToken, me);
 
 /**
  * @swagger
  * /api/auth/me:
  *   get:
- *     summary: Obtener información del usuario autenticado
+ *     summary: Obtener informaciÃ³n del usuario autenticado
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -108,13 +116,9 @@ router.post("/login", login);
  *       200:
  *         description: Usuario autenticado correctamente
  *       401:
- *         description: Token inválido o no proporcionado
+ *         description: Token invÃ¡lido o no proporcionado
  */
-router.get("/me", verifyToken, (req, res) => {
-  res.json({
-    message: "Token válido",
-    user: req.user,
-  });
-});
+
 
 export default router;
+

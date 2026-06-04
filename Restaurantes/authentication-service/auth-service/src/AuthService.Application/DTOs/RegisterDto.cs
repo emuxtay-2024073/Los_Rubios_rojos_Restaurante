@@ -17,6 +17,6 @@ public class RegisterDto
     /// <summary>Rol del usuario. Si se omite, se asigna <c>USER</c>.</summary>
     public string Role { get; set; } = string.Empty;
 
-    /// <summary>Clave secreta, con fines de prueba. Requerida sólo cuando el rol es <c>admin</c>.</summary>
+    /// <summary>Clave secreta opcional. No es necesaria para solicitar el rol de administrador.</summary>
     public string SecretKey { get; set; } = string.Empty;
 }

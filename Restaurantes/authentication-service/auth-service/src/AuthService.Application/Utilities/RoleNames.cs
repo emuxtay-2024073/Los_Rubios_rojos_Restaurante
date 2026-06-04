@@ -4,8 +4,6 @@ public static class RoleNames
 {
     public const string Cliente = "CLIENTE";
     public const string Admin = "ADMIN";
-    public const string AdminSecret = "CLAVE_ADMIN";
-
     public static string? Normalize(string? role)
     {
         if (string.IsNullOrWhiteSpace(role))
@@ -24,8 +22,9 @@ public static class RoleNames
         };
     }
 
-    public static bool IsValidAdminSecret(string? secretKey)
+    public static bool IsValidAdminSecret(string? secretKey, string? expectedSecret)
     {
-        return string.Equals(secretKey?.Trim(), AdminSecret, StringComparison.Ordinal);
+        return !string.IsNullOrWhiteSpace(expectedSecret) &&
+            string.Equals(secretKey?.Trim(), expectedSecret.Trim(), StringComparison.Ordinal);
     }
 }

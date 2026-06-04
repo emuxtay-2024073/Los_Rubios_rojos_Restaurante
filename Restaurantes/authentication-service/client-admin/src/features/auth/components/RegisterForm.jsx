@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useAuthStore } from '../store/authStore.js';
 import toast from 'react-hot-toast';
 
@@ -13,12 +13,12 @@ export const RegisterForm = ({ onLogin }) => {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm({ defaultValues: { role: 'CLIENTE' } });
 
-  const password = watch('password', '');
-  const selectedRole = watch('role', 'CLIENTE');
+  const password = useWatch({ control, name: 'password', defaultValue: '' });
+  const selectedRole = useWatch({ control, name: 'role', defaultValue: 'CLIENTE' });
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirmPassword) {
@@ -30,29 +30,25 @@ export const RegisterForm = ({ onLogin }) => {
       email: data.email,
       password: data.password,
       role: selectedRole === 'ADMIN' ? 'ADMIN' : 'CLIENTE',
-      secretKey: data.secretKey || '',
     };
 
-    setVerificationUrl('');
+    const { success, message, verificationUrl: link } = await registerUser(payload);
 
-    const res = await registerUser(payload);
-    if (res.success) {
-      const link = res.data?.verificationUrl || '';
-      const message =
-        res.data?.message ||
-        'Registrado exitosamente. Revisa tu correo para verificar tu cuenta.';
-
-      setSuccessMessage(message);
-      setVerificationUrl(link);
-
-      if (link) {
-        toast.success('Cuenta creada. Usa el enlace de verificacion mostrado.', { duration: 4000 });
-        return;
-      }
-
-      toast.success('Revisa tu correo para verificar tu cuenta.', { duration: 3000 });
-      setTimeout(() => onLogin(), 2500);
+    if (!success) {
+      toast.error(message || 'No se pudo crear la cuenta');
+      return;
     }
+
+    setSuccessMessage(message);
+    setVerificationUrl(link);
+
+    if (link) {
+      toast.success('Cuenta creada. Usa el enlace de verificación mostrado.', { duration: 4000 });
+      return;
+    }
+
+    toast.success('Revisa tu correo para verificar tu cuenta.', { duration: 3000 });
+    setTimeout(() => onLogin(), 2500);
   };
 
   return (
@@ -146,20 +142,8 @@ export const RegisterForm = ({ onLogin }) => {
       </div>
 
       {selectedRole === 'ADMIN' && (
-        <div>
-          <label htmlFor='secretKey' className='block text-sm font-medium text-gray-900 mb-1.5'>
-            Clave secreta de administrador
-          </label>
-          <input
-            type='text'
-            id='secretKey'
-            placeholder='CLAVE_ADMIN'
-            className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-main-blue focus:border-main-blue'
-            {...register('secretKey', {
-              required: 'La clave secreta es obligatoria para el registro de administrador',
-            })}
-          />
-          {errors.secretKey && <p className='text-red-600 text-xs mt-1'>{errors.secretKey.message}</p>}
+        <div className='rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900'>
+          Al seleccionar administrador, tu cuenta se registrará como cliente y se activará como admin solo después de verificar tu correo.
         </div>
       )}
 

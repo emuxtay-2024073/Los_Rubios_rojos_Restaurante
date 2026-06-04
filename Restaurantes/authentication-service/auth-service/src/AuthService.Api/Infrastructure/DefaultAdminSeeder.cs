@@ -10,16 +10,20 @@ public static class DefaultAdminSeeder
 {
     private const string DefaultUsername = "adminrestaurante";
     private const string DefaultEmail = "adminrestaurante@losrezagados.com";
-    private const string DefaultPassword = "Admin#2026";
-
     public static async Task SeedAsync(IServiceProvider serviceProvider, IConfiguration configuration)
     {
         var users = serviceProvider.GetRequiredService<IUserRepository>();
 
         var username = NormalizeValue(configuration["SeedAdmin:Username"], DefaultUsername);
         var email = NormalizeValue(configuration["SeedAdmin:Email"], DefaultEmail);
-        var password = NormalizeValue(configuration["SeedAdmin:Password"], DefaultPassword);
+        var password = configuration["SeedAdmin:Password"]?.Trim();
         var role = RoleNames.Normalize(configuration["SeedAdmin:Role"]) ?? RoleNames.Admin;
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            Console.WriteLine("[Seed] SeedAdmin:Password no definido. No se creara ni actualizara el admin predeterminado.");
+            return;
+        }
 
         var existingUser = await users.GetByUsername(username) ?? await users.GetByEmail(email);
         if (existingUser != null)

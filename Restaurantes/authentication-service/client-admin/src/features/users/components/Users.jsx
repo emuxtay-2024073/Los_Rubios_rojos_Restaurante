@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUserManagementStore } from '../../auth/store/useUserManagementStore.js';
-import { useAuthStore } from '../../auth/store/authStore.js';
 import { Spinner } from '../../auth/components/Spinner.jsx';
 import { CreateUserModal } from './CreateUserModal.jsx';
 import { showError, showSuccess } from '../../../shared/utils/toast.js';
@@ -8,10 +7,7 @@ import { showError, showSuccess } from '../../../shared/utils/toast.js';
 const PAGE_SIZE = 8;
 
 export const Users = () => {
-  const { users, loading, error, getAllUsers } = useUserManagementStore();
-  const registerUser = useAuthStore((state) => state.register);
-  const registerLoading = useAuthStore((state) => state.loading);
-  const registerError = useAuthStore((state) => state.error);
+  const { users, loading, error, getAllUsers, createUser, promoteUserToAdmin } = useUserManagementStore();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [page, setPage] = useState(1);
@@ -52,15 +48,32 @@ export const Users = () => {
   }, [filteredUsers, currentPage]);
 
   const handleCreate = async (payload) => {
-    const res = await registerUser(payload);
+    const res = await createUser(payload);
     if (res.success) {
-      showSuccess('Usuario creado correctamente.');
-      await getAllUsers(undefined, { force: true });
+      showSuccess('Usuario creado correctamente. Debe verificar su correo.');
       return true;
     }
 
     showError(res.error || 'No se pudo crear el usuario');
     return false;
+  };
+
+  const handlePromote = async (user) => {
+    if (!user.verified && !user.emailConfirmed) {
+      showError('El usuario debe verificar su correo antes de ser admin');
+      return;
+    }
+
+    const ok = window.confirm(`Convertir a ${user.email} en administrador?`);
+    if (!ok) return;
+
+    const res = await promoteUserToAdmin(user._id || user.id);
+    if (res.success) {
+      showSuccess('Solicitud enviada. El usuario debe activar admin desde su correo.');
+      return;
+    }
+
+    showError(res.error || 'No se pudo promover usuario');
   };
 
   if (loading && users.length === 0) return <Spinner />;
@@ -115,18 +128,23 @@ export const Users = () => {
                 <th className='text-left px-4 py-3'>Username</th>
                 <th className='text-left px-4 py-3'>Rol</th>
                 <th className='text-left px-4 py-3'>Estado</th>
+                <th className='text-left px-4 py-3'>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td className='px-4 py-6 text-center text-gray-500' colSpan={4}>
+                  <td className='px-4 py-6 text-center text-gray-500' colSpan={5}>
                     No hay usuarios para mostrar.
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map((u) => (
-                  <tr key={u.id || u.email} className='border-t hover:bg-gray-50'>
+                paginatedUsers.map((u) => {
+                  const isVerified = Boolean(u.verified ?? u.emailConfirmed);
+                  const isAdmin = u.role === 'ADMIN';
+
+                  return (
+                  <tr key={u._id || u.id || u.email} className='border-t hover:bg-gray-50'>
                     <td className='px-4 py-3 font-medium text-gray-800'>{u.email || '-'}</td>
                     <td className='px-4 py-3 text-gray-700'>@{u.username}</td>
                     <td className='px-4 py-3'>
@@ -143,16 +161,29 @@ export const Users = () => {
                     <td className='px-4 py-3'>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          u.emailConfirmed
+                          isVerified
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-amber-100 text-amber-700'
                         }`}
                       >
-                        {u.emailConfirmed ? 'Activo' : 'Pendiente'}
+                        {isVerified ? 'Activo' : 'Pendiente'}
                       </span>
                     </td>
+                    <td className='px-4 py-3'>
+                      {!isAdmin && (
+                        <button
+                          type='button'
+                          onClick={() => handlePromote(u)}
+                          disabled={!isVerified || loading}
+                          className='rounded-full bg-main-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300'
+                        >
+                          Hacer admin
+                        </button>
+                      )}
+                    </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -190,8 +221,8 @@ export const Users = () => {
         isOpen={openCreateModal}
         onClose={() => setOpenCreateModal(false)}
         onCreate={handleCreate}
-        loading={registerLoading}
-        error={registerError}
+        loading={loading}
+        error={error}
       />
     </div>
   );

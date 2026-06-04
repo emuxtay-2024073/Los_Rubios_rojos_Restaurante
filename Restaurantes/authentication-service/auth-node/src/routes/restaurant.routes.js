@@ -13,7 +13,6 @@ import Review from "../models/Review.js";
 import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
 import upload from "../middleware/upload.js";
 import { ROLE_ADMIN, ROLE_CLIENTE } from "../utils/roles.js";
-import upload from "../middleware/upload.js";
 
 const router = express.Router();
 

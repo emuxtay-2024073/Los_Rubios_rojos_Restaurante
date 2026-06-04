@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Any;
+﻿using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -19,7 +19,7 @@ public class AuthExamplesOperationFilter : IOperationFilter
             SetJsonRequestExample(operation, new OpenApiObject
             {
                 ["email"] = new OpenApiString("adminrestaurante@losrezagados.com"),
-                ["password"] = new OpenApiString("Admin#2026")
+                ["password"] = new OpenApiString("CambiarEstaClave#2026")
             });
         }
 
@@ -30,8 +30,7 @@ public class AuthExamplesOperationFilter : IOperationFilter
                 ["username"] = new OpenApiString("carlos.rubio"),
                 ["email"] = new OpenApiString("carlos.rubio@losrezagados.com"),
                 ["password"] = new OpenApiString("MiClaveSegura#2026"),
-                ["role"] = new OpenApiString("admin"),
-                ["secretKey"] = new OpenApiString("string")
+                ["role"] = new OpenApiString("admin")
             });
         }
 
@@ -76,3 +75,4 @@ public class AuthExamplesOperationFilter : IOperationFilter
         }
     }
 }
+

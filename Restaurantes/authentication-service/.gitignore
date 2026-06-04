@@ -1,5 +1,12 @@
 # Node
 node_modules/
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
 
 # .NET
 bin/
@@ -7,4 +14,5 @@ obj/
 
 # logs
 *.log
+logs/
 

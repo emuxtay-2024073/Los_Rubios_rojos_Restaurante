@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Any;
+﻿using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -18,11 +18,11 @@ public class AuthExamplesSchemaFilter : ISchemaFilter
             schema.Example = new OpenApiObject
             {
                 ["email"] = new OpenApiString("adminrestaurante@losrezagados.com"),
-                ["password"] = new OpenApiString("Admin#2026")
+                ["password"] = new OpenApiString("CambiarEstaClave#2026")
             };
 
             SetPropertyExample(schema, "email", "adminrestaurante@losrezagados.com");
-            SetPropertyExample(schema, "password", "Admin#2026");
+            SetPropertyExample(schema, "password", "CambiarEstaClave#2026");
             return;
         }
 
@@ -33,16 +33,13 @@ public class AuthExamplesSchemaFilter : ISchemaFilter
                 ["username"] = new OpenApiString("carlos.rubio"),
                 ["email"] = new OpenApiString("carlos.rubio@losrezagados.com"),
                 ["password"] = new OpenApiString("MiClaveSegura#2026"),
-                ["role"] = new OpenApiString("admin"),
-                ["secretKey"] = new OpenApiString("string")
+                ["role"] = new OpenApiString("admin")
             };
 
             SetPropertyExample(schema, "username", "carlos.rubio");
             SetPropertyExample(schema, "email", "carlos.rubio@losrezagados.com");
             SetPropertyExample(schema, "password", "MiClaveSegura#2026");
             SetPropertyExample(schema, "role", "admin");
-            SetPropertyExample(schema, "secretKey", "string");
-            SetPropertyDescription(schema, "secretKey", "Clave secreta, con fines de prueba. Requerida sólo cuando el rol es admin.");
             return;
         }
 
@@ -94,3 +91,4 @@ public class AuthExamplesSchemaFilter : ISchemaFilter
         }
     }
 }
+

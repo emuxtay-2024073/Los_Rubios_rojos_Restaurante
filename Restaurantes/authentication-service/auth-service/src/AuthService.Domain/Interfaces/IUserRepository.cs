@@ -5,8 +5,10 @@ namespace AuthService.Domain.Interfaces;
 public interface IUserRepository
 {
     Task<User?> GetByUsername(string username);
+    Task<User?> GetById(string id);
     Task<User?> GetByEmail(string email);
     Task<User?> GetByVerificationToken(string token);
+    Task<User?> GetByAdminActivationToken(string token);
     Task<User?> GetByResetToken(string token);
     Task<IReadOnlyList<User>> GetAll();
 
