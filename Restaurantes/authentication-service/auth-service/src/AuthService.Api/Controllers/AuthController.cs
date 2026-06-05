@@ -1,102 +1,41 @@
 using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
+using AuthService.Application.Utilities;
 using AuthService.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace AuthService.Api.Controllers;
 
-/// <summary>
-/// Controlador de autenticación. Contiene endpoints para login, registro, verificación de email y recuperación de contraseña.
-/// </summary>
 [ApiController]
 [Route("api/auth")]
 [Produces("application/json")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _auth;
-    private readonly IConfiguration _configuration;
-    private readonly IJwtService _jwt;
     private readonly IUserRepository _users;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(IAuthService auth, IConfiguration configuration, IJwtService jwt, IUserRepository users)
+    public AuthController(IAuthService auth, IUserRepository users, IConfiguration configuration)
     {
         _auth = auth;
-        _configuration = configuration;
-        _jwt = jwt;
         _users = users;
+        _configuration = configuration;
     }
 
-    // ========================= LOGIN =========================
-    /// <summary>
-    /// Inicia sesión con credenciales válidas.
-    /// </summary>
-    /// <param name="dto">Email y contraseña.</param>
-    /// <returns>Token JWT y mensaje de estado.</returns>
-    /// <response code="200">Login exitoso, devuelve token.</response>
-    /// <response code="401">Credenciales inválidas o email no verificado.</response>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        try
-        {
-            var result = await _auth.Login(dto);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            var seedLogin = TrySeedAdminLogin(dto);
-            return seedLogin ?? Unauthorized(result);
-        }
-        catch (Exception)
-        {
-            var seedLogin = TrySeedAdminLogin(dto);
-            if (seedLogin is not null) return seedLogin;
-
-            // rethrow as Unauthorized to the client with a generic message
-            return Unauthorized(new AuthService.Application.DTOs.AuthResponseDto { Success = false, Message = "Servicio de autenticación no disponible" });
-        }
+        var result = await _auth.Login(dto);
+        return result.Success ? Ok(result) : Unauthorized(result);
     }
 
-    private IActionResult? TrySeedAdminLogin(LoginDto dto)
-    {
-        var seedEmail = _configuration["SeedAdmin:Email"];
-        var seedPassword = _configuration["SeedAdmin:Password"];
-
-        if (string.IsNullOrWhiteSpace(seedEmail) ||
-            string.IsNullOrWhiteSpace(seedPassword) ||
-            !string.Equals(dto.Email, seedEmail, StringComparison.OrdinalIgnoreCase) ||
-            dto.Password != seedPassword)
-        {
-            return null;
-        }
-
-        var user = new AuthService.Domain.Entities.User
-        {
-            Id = Guid.NewGuid().ToString(),
-            Username = _configuration["SeedAdmin:Username"] ?? "adminrestaurante",
-            Email = seedEmail,
-            Role = "ADMIN",
-            EmailConfirmed = true,
-        };
-
-        var token = _jwt.GenerateToken(user);
-        var response = AuthResponseDto.SuccessResponse("Login exitoso", token);
-        return Ok(response);
-    }
-
-    // ========================= REGISTER =========================
-    /// <summary>
-    /// Registra un nuevo usuario con usuario, email y contraseña.
-    /// </summary>
-    /// <param name="dto">Datos del nuevo usuario.</param>
-    /// <returns>Mensaje de éxito y token de verificación de correo.</returns>
-    /// <response code="200">Registro exitoso.</response>
-    /// <response code="400">Faltan datos o el usuario/email ya existe.</response>
     [HttpPost("register")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
@@ -106,11 +45,6 @@ public class AuthController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    // ========================= USERS =========================
-    /// <summary>
-    /// Lista los usuarios registrados. Requiere un token de administrador.
-    /// </summary>
-    /// <returns>Usuarios registrados.</returns>
     [Authorize(Roles = "ADMIN")]
     [HttpGet("users")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -122,25 +56,46 @@ public class AuthController : ControllerBase
 
         return Ok(new
         {
-            users = users.Select(user => new UserResponseDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                Role = user.Role,
-                EmailConfirmed = user.EmailConfirmed
-            })
+            users = users.Select(user => ToUserResponse(user))
         });
     }
 
-    // ========================= VERIFY EMAIL =========================
-    /// <summary>
-    /// Verifica el correo electrónico del usuario usando un token enviado por email.
-    /// </summary>
-    /// <param name="token">Token de verificación.</param>
-    /// <returns>Resultado de la verificación.</returns>
-    /// <response code="200">Email verificado correctamente.</response>
-    /// <response code="400">Token faltante o inválido.</response>
+    [Authorize(Roles = "ADMIN")]
+    [HttpPatch("users/{id}/promote")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> PromoteUserToAdmin([FromRoute] string id)
+    {
+        var requestedBy = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var result = await _auth.RequestAdminActivation(id, requestedBy);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpGet("verify-email")]
+    public async Task<IActionResult> VerifyEmailGet([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            var errorIcon = "<div class=\"icon error\">✕</div>";
+            return Content(GetHtmlPage("Error de verificación", "El token es requerido.", errorIcon), "text/html");
+        }
+
+        var result = await _auth.VerifyEmail(token);
+
+        if (result.Success)
+        {
+            var successIcon = "<div class=\"icon success\">✓</div>";
+            var body = result.Message ?? "Tu correo ha sido verificado correctamente. Ya puedes iniciar sesión.";
+            return Content(GetHtmlPage("¡Verificación exitosa!", body, $"{successIcon}{GetFrontendLoginLink()}"), "text/html");
+        }
+
+        var failIcon = "<div class=\"icon error\">✕</div>";
+        return Content(GetHtmlPage("Error al verificar el correo", result.Message ?? "No se pudo verificar el token.", failIcon), "text/html");
+    }
+
     [HttpPost("verify-email")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
@@ -153,14 +108,37 @@ public class AuthController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    // ========================= FORGOT PASSWORD =========================
-    /// <summary>
-    /// Solicita un token para recuperar la contraseña del email proporcionado.
-    /// </summary>
-    /// <param name="email">Email registrado.</param>
-    /// <returns>Token de recuperación o mensaje de error.</returns>
-    /// <response code="200">Token de recuperación generado.</response>
-    /// <response code="400">Email inválido o no encontrado.</response>
+    [HttpGet("activate-admin")]
+    public async Task<IActionResult> ActivateAdminGet([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            var errorIcon = "<div class=\"icon error\">✕</div>";
+            return Content(GetHtmlPage("Error de activación", "El token es requerido.", errorIcon), "text/html");
+        }
+
+        var result = await _auth.ActivateAdminRole(token);
+
+        if (result.Success)
+        {
+            var successIcon = "<div class=\"icon success\">✓</div>";
+            var body = result.Message ?? "Tu rol de administrador ha sido activado correctamente. Puedes iniciar sesión ahora.";
+            return Content(GetHtmlPage("¡Admin activado!", body, $"{successIcon}{GetFrontendLoginLink()}"), "text/html");
+        }
+
+        var failIcon = "<div class=\"icon error\">✕</div>";
+        return Content(GetHtmlPage("Error al activar admin", result.Message ?? "No se pudo activar el rol de admin.", failIcon), "text/html");
+    }
+
+    [HttpPost("activate-admin")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ActivateAdminRole([FromQuery] string token)
+    {
+        var result = await _auth.ActivateAdminRole(token);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpPost("forgot-password")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
@@ -173,26 +151,138 @@ public class AuthController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    // ========================= RESET PASSWORD =========================
-    /// <summary>
-    /// Restablece la contraseña usando un token de recuperación y la nueva contraseña.
-    /// </summary>
-    /// <param name="token">Token de recuperación enviado por email.</param>
-    /// <param name="newPassword">Nueva contraseña a establecer.</param>
-    /// <returns>Resultado del proceso.</returns>
-    /// <response code="200">Contraseña actualizada.</response>
-    /// <response code="400">Faltan token o nueva contraseña.</response>
     [HttpPost("reset-password")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ResetPassword(
-        [FromQuery] string token,
-        [FromQuery] string newPassword)
+    public async Task<IActionResult> ResetPassword([FromQuery] string token, [FromQuery] string newPassword)
     {
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
-            return BadRequest(new AuthResponseDto { Success = false, Message = "Token y nueva contraseña son requeridos" });
+            return BadRequest(new AuthResponseDto { Success = false, Message = "Token y nueva contrasena son requeridos" });
 
         var result = await _auth.ResetPassword(token, newPassword);
         return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    private string GetFrontendLoginLink()
+    {
+        var frontendUrl = _configuration["AppSettings:FrontendUrl"];
+        if (string.IsNullOrWhiteSpace(frontendUrl))
+        {
+            return string.Empty;
+        }
+
+        frontendUrl = frontendUrl.TrimEnd('/');
+        return $"<script>var redirectUrl = '{frontendUrl}/login'; var countdown = 4; function redirect() {{ if (countdown > 0) {{ document.getElementById('countdown').innerText = countdown; countdown--; setTimeout(redirect, 1000); }} else {{ window.location.href = redirectUrl; }} }} window.onload = function() {{ redirect(); }};</script><div id=\"redirectContainer\" style=\"text-align:center;margin-top:24px;\"><p style=\"margin:0 0 16px;font-size:14px;color:#666;\">Te llevaremos al inicio de sesión en <span id=\"countdown\" style=\"font-weight:bold;font-size:18px;color:#a91010;\">4</span> segundos...</p><a href=\"{frontendUrl}/login\" style=\"display:inline-block;background:#a91010;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;transition:background 0.3s;\">Ir ahora al login</a></div>";
+    }
+
+    private static string GetHtmlPage(string title, string body, string actionButtonHtml = "")
+    {
+        var html = $@"<!DOCTYPE html>
+<html lang=""es"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>{title}</title>
+  <style>
+    * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+    body {{
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fff9ee 0%, #f7dfb8 48%, #fff3db 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }}
+    .container {{
+      max-width: 520px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+      padding: 48px 32px;
+      text-align: center;
+      animation: slideUp 0.6s ease-out;
+    }}
+    @keyframes slideUp {{
+      from {{ transform: translateY(30px); opacity: 0; }}
+      to {{ transform: translateY(0); opacity: 1; }}
+    }}
+    .icon {{
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      animation: scaleIn 0.6s ease-out;
+    }}
+    @keyframes scaleIn {{
+      from {{ transform: scale(0.8); opacity: 0; }}
+      to {{ transform: scale(1); opacity: 1; }}
+    }}
+    .icon.success {{
+      background: #d1fae5;
+      color: #059669;
+    }}
+    .icon.error {{
+      background: #fee2e2;
+      color: #dc2626;
+    }}
+    h1 {{
+      font-size: 28px;
+      color: #1f2937;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }}
+    h1.success {{ color: #059669; }}
+    h1.error {{ color: #dc2626; }}
+    .body {{
+      font-size: 16px;
+      line-height: 1.75;
+      color: #4b5563;
+      margin-bottom: 28px;
+    }}
+    .logo {{
+      margin-bottom: 24px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: #a91010;
+    }}
+    #redirectContainer {{
+      margin-top: 24px;
+    }}
+    #countdown {{
+      font-weight: bold;
+      font-size: 20px;
+      color: #a91010;
+    }}
+  </style>
+</head>
+<body>
+  <div class=""container"">
+    <div class=""logo"">Los Rubios Rojos</div>
+    {actionButtonHtml}
+    <div class=""body"">{body}</div>
+  </div>
+</body>
+</html>";
+        return html;
+    }
+
+    private static UserResponseDto ToUserResponse(AuthService.Domain.Entities.User user)
+    {
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            EmailConfirmed = user.EmailConfirmed
+        };
     }
 }

@@ -320,7 +320,6 @@ export const Restaurants = () => {
                     </p>
                   </div>
                 )}
-                {formErrors.image && <p className='mt-1 text-xs text-red-600'>{formErrors.image}</p>}
               </label>
 
               <div className='flex justify-end gap-3 pt-2 sm:col-span-2'>

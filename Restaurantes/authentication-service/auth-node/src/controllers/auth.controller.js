@@ -1,62 +1,239 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
+import { sendVerificationEmail } from "../services/email.service.js";
+import { normalizeRoleName, ROLE_ADMIN, ROLE_CLIENTE } from "../utils/roles.js";
 import {
-  normalizeRoleName,
-  isAdminSecretValid,
-  ROLE_ADMIN,
-  ROLE_CLIENTE
-} from "../utils/roles.js";
+  createRawToken,
+  getJwtOptions,
+  getJwtSecret,
+  hashToken,
+  normalizeEmail,
+  validateEmail,
+  validatePassword
+} from "../utils/authSecurity.js";
+
+const createClientRole = async () => {
+  return Role.findOneAndUpdate(
+    { name: ROLE_CLIENTE },
+    { name: ROLE_CLIENTE },
+    { new: true, upsert: true }
+  );
+};
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password, role, secretKey } = req.body;
+    const { username, email, password } = req.body;
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedUsername = username?.trim();
 
-    if (!username || !email || !password) {
+    if (!normalizedUsername || !normalizedEmail || !password) {
       return res.status(400).json({
         success: false,
-        message: "Username, email y contraseña son requeridos"
+        message: "Username, email y contrasena son requeridos"
       });
     }
 
-    const roleName = normalizeRoleName(role || ROLE_CLIENTE);
-
-    if (!roleName) {
-      return res.status(400).json({ success: false, message: "El rol solo puede ser cliente o admin" });
+    if (normalizedUsername.length < 3) {
+      return res.status(400).json({
+        success: false,
+        message: "El username debe tener al menos 3 caracteres"
+      });
     }
 
-    if (roleName === ROLE_ADMIN && !isAdminSecretValid(secretKey)) {
-      return res.status(400).json({ success: false, message: "Se necesita la clave secreta para ser admin" });
+    if (!validateEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "El formato del correo no es valido"
+      });
     }
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ success: false, message: passwordError });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }]
+    });
+
     if (existingUser) {
       return res.status(400).json({ success: false, message: "El usuario ya existe" });
     }
 
-    const roleDocument = await Role.findOneAndUpdate(
-      { name: roleName },
-      { name: roleName },
-      { new: true, upsert: true }
-    );
+    const roleDocument = await createClientRole();
+    const verificationToken = createRawToken();
 
     const newUser = new User({
-      username,
-      email,
+      username: normalizedUsername,
+      email: normalizedEmail,
       password,
-      role: roleDocument._id
+      role: roleDocument._id,
+      verified: false,
+      verificationToken: hashToken(verificationToken),
+      verificationTokenExpires: Date.now() + 60 * 60 * 1000
     });
 
     await newUser.save();
+    await sendVerificationEmail(newUser, verificationToken);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Usuario registrado correctamente"
+      message: "Usuario registrado correctamente. Revisa tu correo para verificar tu cuenta.",
+      emailVerificationRequired: true
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al crear el usuario"
+    });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const token = req.query.token || req.body.token;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token de verificacion requerido"
+      });
+    }
+
+    const tokenHash = hashToken(token);
+    const user = await User.findOne({
+      verificationToken: { $in: [tokenHash, token] },
+      verificationTokenExpires: { $gt: Date.now() }
     });
 
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Token invalido o expirado"
+      });
+    }
+
+    user.verified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpires = null;
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Correo verificado correctamente. Ya puedes iniciar sesion."
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al verificar el correo"
+    });
+  }
+};
+
+export const resendVerification = async (req, res) => {
+  try {
+    const normalizedEmail = normalizeEmail(req.body.email);
+
+    if (!normalizedEmail || !validateEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Correo electronico valido requerido"
+      });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "No existe ninguna cuenta con ese correo"
+      });
+    }
+
+    if (user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "La cuenta ya esta verificada"
+      });
+    }
+
+    const verificationToken = createRawToken();
+    user.verificationToken = hashToken(verificationToken);
+    user.verificationTokenExpires = Date.now() + 60 * 60 * 1000;
+    await user.save();
+
+    await sendVerificationEmail(user, verificationToken);
+
+    return res.json({
+      success: true,
+      message: "Se ha reenviado el correo de verificacion"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al reenviar el correo"
+    });
+  }
+};
+
+export const activateAdminRole = async (req, res) => {
+  try {
+    const token = req.query.token || req.body.token;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token de activacion admin requerido"
+      });
+    }
+
+    const tokenHash = hashToken(token);
+    const user = await User.findOne({
+      adminActivationToken: { $in: [tokenHash, token] },
+      adminActivationTokenExpires: { $gt: Date.now() }
+    }).populate("role");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Token de activacion admin invalido o expirado"
+      });
+    }
+
+    if (!user.verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Debes verificar tu correo antes de activar el rol admin"
+      });
+    }
+
+    const role = await Role.findOneAndUpdate(
+      { name: ROLE_ADMIN },
+      { name: ROLE_ADMIN },
+      { new: true, upsert: true }
+    );
+
+    user.role = role._id;
+    user.adminActivationToken = null;
+    user.adminActivationTokenExpires = null;
+    user.adminActivationRequestedAt = null;
+    user.adminActivationRequestedBy = null;
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Rol admin activado correctamente. Inicia sesion nuevamente para obtener tus permisos."
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al activar el rol admin"
+    });
   }
 };
 
@@ -65,35 +242,94 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email y contraseña son requeridos" });
+      return res.status(400).json({
+        success: false,
+        message: "Email y contrasena son requeridos"
+      });
     }
 
-    const user = await User.findOne({ email }).populate("role");
+    const user = await User.findOne({ email: normalizeEmail(email) }).populate("role");
     if (!user) {
-      return res.status(401).json({ success: false, message: "Credenciales inválidas" });
+      return res.status(401).json({ success: false, message: "Credenciales invalidas" });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ success: false, message: "Credenciales inválidas" });
+    if (user.isLocked()) {
+      return res.status(429).json({
+        success: false,
+        message: "Muchos intentos fallidos. Intenta nuevamente mas tarde."
+      });
     }
+
+    const validPassword = await user.comparePassword(password);
+    if (!validPassword) {
+      await user.incrementLoginAttempts();
+      return res.status(401).json({ success: false, message: "Credenciales invalidas" });
+    }
+
+    if (!user.verified) {
+      return res.status(403).json({
+        success: false,
+        message: "La cuenta no esta verificada. Revisa tu correo para activar tu usuario.",
+        emailVerificationRequired: true
+      });
+    }
+
+    await user.resetLoginAttempts();
 
     const roleName = normalizeRoleName(user.role?.name) || ROLE_CLIENTE;
-
-    const jwtSecret = process.env.JWT_SECRET || process.env.JWT_KEY || "E$3cr3tKyF0rKln4lSp0rts@In6am2024";
     const token = jwt.sign(
-      { id: user._id, username: user.username, role: roleName },
-      jwtSecret,
-      { expiresIn: "2h" }
+      {
+        sub: user._id.toString(),
+        id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        role: roleName,
+        verified: user.verified
+      },
+      getJwtSecret(),
+      getJwtOptions()
     );
 
-    res.json({
-      success: true,
-      message: "Login exitoso",
-      token
-    });
-
+    return res.json({ success: true, message: "Login exitoso", token });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al iniciar sesion"
+    });
+  }
+};
+
+export const me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user?.id || req.user?.sub)
+      .select(
+        "-password -verificationToken -verificationTokenExpires -adminActivationToken -adminActivationTokenExpires -loginAttempts -lockUntil"
+      )
+      .populate("role");
+
+    if (!user || !user.verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Sesion invalida"
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: normalizeRoleName(user.role?.name) || ROLE_CLIENTE,
+        verified: user.verified
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al obtener la sesion"
+    });
   }
 };

@@ -1,48 +1,42 @@
-import {
-    normalizeRoleName
-} from "../utils/roles.js";
-
 import jwt from "jsonwebtoken";
+import { normalizeRoleName } from "../utils/roles.js";
+import { getJwtSecret, getJwtVerifyOptions } from "../utils/authSecurity.js";
 
 export const verifyToken = (req, res, next) => {
-    const authHeader = req.headers["authorization"];
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-        return res.status(401).json({ message: "Token requerido" });
-    }
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "Token requerido" });
+  }
 
-    const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
-    if (!token) {
-        return res.status(401).json({ message: "Token mal formado" });
-    }
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Token mal formado" });
+  }
 
-    const secret = process.env.JWT_SECRET || process.env.JWT_KEY || "E$3cr3tKyF0rKln4lSp0rts@In6am2024";
-    const verifyOptions = {};
-    if (process.env.JWT_ISSUER) {
-        verifyOptions.issuer = process.env.JWT_ISSUER;
-    }
-    if (process.env.JWT_AUDIENCE) {
-        verifyOptions.audience = process.env.JWT_AUDIENCE;
-    }
-
-    try {
-        const decoded = jwt.verify(token, secret, verifyOptions);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.status(403).json({ message: "Token inválido" });
-    }
+  try {
+    req.user = jwt.verify(token, getJwtSecret(), getJwtVerifyOptions());
+    return next();
+  } catch (error) {
+    const expired = error.name === "TokenExpiredError";
+    return res.status(expired ? 401 : 403).json({
+      success: false,
+      message: "Token invalido",
+      error: expired ? "TOKEN_EXPIRED" : "TOKEN_INVALID"
+    });
+  }
 };
 
 export const verifyRole = (role) => {
-    return (req, res, next) => {
-        const requiredRole = normalizeRoleName(role);
-        const userRole = normalizeRoleName(req.user?.role);
+  return (req, res, next) => {
+    const requiredRole = normalizeRoleName(role);
+    const userRole = normalizeRoleName(req.user?.role);
 
-        if (!requiredRole || !userRole || userRole !== requiredRole) {
-            return res.status(403).json({ message: "No autorizado" });
-        }
-        next();
-    };
+    if (!requiredRole || !userRole || userRole !== requiredRole) {
+      return res.status(403).json({ success: false, message: "No autorizado" });
+    }
+
+    return next();
+  };
 };

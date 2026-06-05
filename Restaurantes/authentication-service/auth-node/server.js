@@ -22,13 +22,32 @@ import Order from "./src/models/Order.js";
 import Table from "./src/models/Table.js";
 import Reservation from "./src/models/Reservation.js";
 import Review from "./src/models/Review.js";
+import User from "./src/models/User.js";
+import Role from "./src/models/Role.js";
 
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "100kb" }));
+
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Origen no permitido por CORS"));
+    },
+    credentials: true
+}));
 
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
@@ -37,8 +56,70 @@ if (!mongoUri) {
 }
 
 mongoose.connect(mongoUri)
-    .then(() => console.log("MongoDB conectado"))
+    .then(async () => {
+        console.log("MongoDB conectado");
+        await seedDefaultAdmin();
+    })
     .catch(err => console.error(err));
+
+const seedDefaultAdmin = async () => {
+    try {
+        const defaultAdminUsername = process.env.SEED_ADMIN_USERNAME || "adminrestaurante";
+        const defaultAdminEmail = (process.env.SEED_ADMIN_EMAIL || "adminrestaurante@losrezagados.com").toLowerCase().trim();
+        const defaultAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+        const defaultRoleName = process.env.SEED_ADMIN_ROLE || "ADMIN";
+
+        if (!defaultAdminPassword) {
+            console.warn("[Seed] SEED_ADMIN_PASSWORD no definido. No se creara ni actualizara el admin predeterminado.");
+            return;
+        }
+
+        const role = await Role.findOneAndUpdate(
+            { name: defaultRoleName },
+            { name: defaultRoleName },
+            { new: true, upsert: true }
+        );
+
+        let admin = await User.findOne({ email: defaultAdminEmail });
+        if (!admin) {
+            admin = new User({
+                username: defaultAdminUsername,
+                email: defaultAdminEmail,
+                password: defaultAdminPassword,
+                role: role._id,
+                verified: true,
+                verificationToken: null,
+                verificationTokenExpires: null,
+                loginAttempts: 0,
+                lockUntil: null
+            });
+            await admin.save();
+            console.log(`[Seed] Admin predeterminado creado: ${defaultAdminEmail}`);
+            return;
+        }
+
+        const isAdminRole = admin.role?.toString() === role._id.toString();
+        if (!isAdminRole) {
+            admin.role = role._id;
+        }
+
+        if (!admin.verified) {
+            admin.verified = true;
+            admin.verificationToken = null;
+            admin.verificationTokenExpires = null;
+        }
+
+        const passwordMatches = await admin.comparePassword(defaultAdminPassword);
+        if (!passwordMatches) {
+            admin.password = defaultAdminPassword;
+        }
+
+        await admin.save();
+        console.log(`[Seed] Admin predeterminado actualizado: ${defaultAdminEmail}`);
+    } catch (error) {
+        console.error("Error al sembrar admin predeterminado:", error);
+    }
+};
 
 const options = {
     definition: {
@@ -189,9 +270,18 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const PORT = process.env.PORT || 3000;
-let server = app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log("Servidor en http://localhost:" + PORT);
     console.log("Swagger UI disponible en: http://localhost:" + PORT + "/api-docs");
+});
+
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`El puerto ${PORT} ya está en uso. Cierra el proceso existente o cambia PORT en .env.`);
+        process.exit(1);
+    }
+    console.error('Error de servidor:', error);
+    process.exit(1);
 });
 
 // Graceful shutdown

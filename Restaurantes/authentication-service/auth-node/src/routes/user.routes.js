@@ -1,5 +1,7 @@
 import { Router } from "express";
-import { createUser, getUsers } from "../controllers/user.controller.js";
+import { verifyToken, verifyRole } from "../middleware/auth.middleware.js";
+import { ROLE_ADMIN } from "../utils/roles.js";
+import { createUser, getUsers, promoteToAdmin } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -51,7 +53,7 @@ const router = Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", createUser);
+router.post("/", verifyToken, verifyRole(ROLE_ADMIN), createUser);
 
 /**
  * @swagger
@@ -59,6 +61,8 @@ router.post("/", createUser);
  *   get:
  *     summary: Obtener todos los usuarios
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de usuarios
@@ -82,6 +86,31 @@ router.post("/", createUser);
  *       500:
  *         description: Error del servidor
  */
-router.get("/", getUsers);
+router.get("/", verifyToken, verifyRole(ROLE_ADMIN), getUsers);
+
+/**
+ * @swagger
+ * /users/{id}/promote:
+ *   patch:
+ *     summary: Promover un usuario a admin
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario a promocionar
+ *     responses:
+ *       200:
+ *         description: Usuario promovido a admin correctamente
+ *       404:
+ *         description: Usuario no encontrado
+ *       403:
+ *         description: No autorizado
+ */
+router.patch("/:id/promote", verifyToken, verifyRole(ROLE_ADMIN), promoteToAdmin);
 
 export default router;

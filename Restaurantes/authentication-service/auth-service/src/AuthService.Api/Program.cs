@@ -11,11 +11,14 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls(builder.Configuration["AppSettings:BackendUrl"] ?? "http://127.0.0.1:5023");
 
 // ====================
 // Controllers & Swagger
@@ -134,7 +137,9 @@ builder.Services
             ValidAudience = audience,
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(key)),
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            RoleClaimType = "role",
+            NameClaimType = JwtRegisteredClaimNames.UniqueName
         };
     });
 
@@ -195,7 +200,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var urls = string.Join(", ", app.Urls);
     if (string.IsNullOrWhiteSpace(urls))
     {
-        urls = "http://localhost:5022";
+        urls = "http://localhost:5023";
     }
 
     Console.WriteLine($"[API] Ruta disponible: {urls}");

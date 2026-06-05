@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Spinner } from '../../auth/components/Spinner.jsx';
 
 export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) => {
@@ -8,11 +8,11 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
     handleSubmit,
     getValues,
     reset,
-    watch,
+    control,
     formState: { errors },
   } = useForm({ defaultValues: { role: 'CLIENTE' } });
 
-  const selectedRole = watch('role', 'CLIENTE');
+  const selectedRole = useWatch({ control, name: 'role', defaultValue: 'CLIENTE' });
 
   useEffect(() => {
     if (!isOpen) {
@@ -28,7 +28,6 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
       email: values.email,
       password: values.password,
       role: values.role || 'CLIENTE',
-      secretKey: values.role === 'ADMIN' ? values.secretKey || '' : '',
     });
 
     if (ok) {
@@ -107,8 +106,12 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                 {...register('password', {
                   required: 'La contrasena es obligatoria',
                   minLength: {
-                    value: 6,
-                    message: 'Debe tener al menos 6 caracteres',
+                    value: 8,
+                    message: 'Debe tener al menos 8 caracteres',
+                  },
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+                    message: 'Debe incluir mayusculas, minusculas y numeros',
                   },
                 })}
                 type='password'
@@ -139,21 +142,8 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
           </div>
 
           {selectedRole === 'ADMIN' && (
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                Clave secreta de administrador
-              </label>
-              <input
-                {...register('secretKey', {
-                  validate: (value) =>
-                    selectedRole !== 'ADMIN' ||
-                    Boolean(value?.trim()) ||
-                    'La clave secreta es obligatoria para crear un administrador',
-                })}
-                type='text'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
-              />
-              {errors.secretKey && <p className='text-red-600 text-xs'>{errors.secretKey.message}</p>}
+            <div className='rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900'>
+              Este usuario recibira un correo de verificacion. No podra entrar como admin hasta confirmar su correo.
             </div>
           )}
 

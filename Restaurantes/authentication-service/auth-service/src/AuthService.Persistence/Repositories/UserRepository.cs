@@ -14,14 +14,26 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public Task<User?> GetByUsername(string username) =>
-        _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+    public Task<User?> GetByUsername(string username)
+    {
+        var normalizedUsername = username.Trim().ToLower();
+        return _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedUsername);
+    }
 
-    public Task<User?> GetByEmail(string email) =>
-        _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    public Task<User?> GetById(string id) =>
+        _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+    public Task<User?> GetByEmail(string email)
+    {
+        var normalizedEmail = email.Trim().ToLower();
+        return _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+    }
 
     public Task<User?> GetByVerificationToken(string token) =>
         _context.Users.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
+
+    public Task<User?> GetByAdminActivationToken(string token) =>
+        _context.Users.FirstOrDefaultAsync(u => u.AdminActivationToken == token);
 
     public Task<User?> GetByResetToken(string token) =>
         _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);

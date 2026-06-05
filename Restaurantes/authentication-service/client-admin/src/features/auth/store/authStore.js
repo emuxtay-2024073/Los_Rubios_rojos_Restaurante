@@ -143,6 +143,7 @@ export const useAuthStore = create(
         if (state) {
           state.loading = false;
           state.error = null;
+          state.isAuthenticated = Boolean(state.token);
           state.isLoadingAuth = false;
         }
       },
