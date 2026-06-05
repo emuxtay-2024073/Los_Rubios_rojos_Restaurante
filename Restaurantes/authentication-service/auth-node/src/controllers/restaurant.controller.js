@@ -10,16 +10,16 @@ const buildRestaurantPayload = async (body, file) => {
         email: body.email?.trim(),
         city: body.city?.trim(),
         manager: body.manager?.trim(),
-        openingHours: body.openingHours?.trim()
+        openingHours: body.openingHours?.trim(),
     };
 
     if (body.capacity !== undefined && body.capacity !== "") {
         payload.capacity = Number(body.capacity);
     }
 
-    if (file) {
+    if (file?.path) {
         const uploadResult = await cloudinary.uploader.upload(file.path, {
-            folder: process.env.CLOUDINARY_FOLDER || "restaurants"
+            folder: process.env.CLOUDINARY_FOLDER || "restaurants",
         });
         payload.image = uploadResult.secure_url;
         await fs.unlink(file.path).catch(() => {});

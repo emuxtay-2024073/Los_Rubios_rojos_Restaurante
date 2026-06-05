@@ -7,11 +7,14 @@ const normalizeResponse = (data, key) => {
 };
 
 const formDataConfig = (payload) => {
-  if (payload instanceof FormData) {
-    return {};
-  }
-  return {};
+  // Si el payload es FormData, no mandamos config extra.
+  // El interceptor `addAuthHeaders` ya quita Content-Type cuando detecta FormData.
+  return undefined;
 };
+
+
+
+
 
 export const getRestaurants = async () => {
   const { data } = await axiosAdmin.get('/restaurants');
@@ -22,6 +25,7 @@ export const createRestaurant = async (payload) => {
   const { data } = await axiosAdmin.post('/restaurants', payload, formDataConfig(payload));
   return data;
 };
+
 
 export const updateRestaurant = async (id, payload) => {
   const { data } = await axiosAdmin.put(`/restaurants/${id}`, payload, formDataConfig(payload));
