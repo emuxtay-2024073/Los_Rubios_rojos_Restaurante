@@ -41,12 +41,8 @@ public class AuthService : IAuthService
                     ? $"{NormalizeBackendUrl(_configuration["AppSettings:BackendUrl"])}/api/auth/verify-email?token={user.EmailVerificationToken}"
                     : null;
 
-            var pendingAdminMessage = string.Equals(user.PendingRole, RoleNames.Admin, StringComparison.OrdinalIgnoreCase)
-                ? "Email no verificado. Revisa tu correo para activar tu rol de administrador antes de iniciar sesion."
-                : "Email no verificado. Verifica tu cuenta antes de iniciar sesion.";
-
             return AuthResponseDto.Fail(
-                pendingAdminMessage,
+                "Email no verificado. Verifica tu cuenta antes de iniciar sesion.",
                 verificationUrl
             );
         }
@@ -74,21 +70,14 @@ public class AuthService : IAuthService
         if (await _users.GetByEmail(email) != null)
             return AuthResponseDto.Fail($"El email '{email}' ya esta registrado");
 
-        var role = RoleNames.Normalize(string.IsNullOrWhiteSpace(dto.Role) ? RoleNames.Cliente : dto.Role);
-
-        if (role == null)
-            return AuthResponseDto.Fail("El rol solo puede ser cliente o admin");
-
         var verificationToken = Guid.NewGuid().ToString();
-        var isAdminRequest = string.Equals(role, RoleNames.Admin, StringComparison.OrdinalIgnoreCase);
 
         var user = new User
         {
             Username = username,
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = isAdminRequest ? RoleNames.Cliente : role,
-            PendingRole = isAdminRequest ? RoleNames.Admin : null,
+            Role = RoleNames.User,
             EmailConfirmed = false,
             EmailVerificationToken = verificationToken
         };
@@ -173,9 +162,7 @@ public class AuthService : IAuthService
             bool.TryParse(_configuration["AppSettings:ExposeVerificationLink"], out var exposeLink) && exposeLink;
         var shouldReturnVerificationUrl = exposeVerificationLink || !emailSent;
         var responseMessage = emailSent
-            ? isAdminRequest
-                ? "Registro exitoso. Revisa tu correo para verificar tu cuenta y activar tu rol de administrador."
-                : "Registro exitoso. Revisa tu correo para verificar tu cuenta antes de iniciar sesion."
+            ? "Registro exitoso. Revisa tu correo para verificar tu cuenta antes de iniciar sesion."
             : "Registro exitoso, pero no se pudo enviar el correo. Usa el enlace de verificacion mostrado en pantalla.";
 
         return AuthResponseDto.SuccessResponse(
@@ -194,13 +181,6 @@ public class AuthService : IAuthService
             return AuthResponseDto.Fail("Token invalido");
 
         var activationMessage = "Email verificado correctamente.";
-        if (string.Equals(user.PendingRole, RoleNames.Admin, StringComparison.OrdinalIgnoreCase))
-        {
-            user.Role = RoleNames.Admin;
-            user.PendingRole = null;
-            activationMessage = "Email verificado correctamente. Tu rol de administrador ya está activo.";
-        }
-
         user.EmailConfirmed = true;
         user.EmailVerificationToken = null;
 
@@ -209,84 +189,30 @@ public class AuthService : IAuthService
         return AuthResponseDto.SuccessResponse(activationMessage);
     }
 
-    public async Task<AuthResponseDto> RequestAdminActivation(string userId, string? requestedBy)
+    public async Task<AuthResponseDto> UpdateUserRole(string userId, string role)
     {
-        var user = await _users.GetById(userId);
+        if (string.IsNullOrWhiteSpace(userId))
+            return AuthResponseDto.Fail("Usuario no encontrado");
 
+        var normalizedRole = RoleNames.Normalize(role);
+        if (normalizedRole == null || normalizedRole == RoleNames.SuperAdmin)
+            return AuthResponseDto.Fail("Solo se puede asignar el rol USER o ADMIN.");
+
+        var user = await _users.GetById(userId);
         if (user == null)
             return AuthResponseDto.Fail("Usuario no encontrado");
 
-        if (!user.EmailConfirmed)
-            return AuthResponseDto.Fail("El usuario debe verificar su correo antes de ser admin");
+        var currentRole = RoleNames.Normalize(user.Role) ?? RoleNames.User;
+        if (currentRole == RoleNames.SuperAdmin)
+            return AuthResponseDto.Fail("No se puede cambiar el rol de un SUPER_ADMIN desde esta ruta.");
 
-        if (RoleNames.Normalize(user.Role) == RoleNames.Admin)
-            return AuthResponseDto.SuccessResponse("El usuario ya es admin");
+        if (currentRole == normalizedRole)
+            return AuthResponseDto.SuccessResponse("El usuario ya tiene ese rol.");
 
-        user.AdminActivationToken = Guid.NewGuid().ToString("N");
-        user.AdminActivationTokenExpiresAt = DateTime.UtcNow.AddMinutes(30);
-        user.AdminActivationRequestedAt = DateTime.UtcNow;
-        user.AdminActivationRequestedBy = requestedBy;
-
+        user.Role = normalizedRole;
         await _users.Update(user);
 
-        var backendUrl = NormalizeBackendUrl(_configuration["AppSettings:BackendUrl"]);
-        var activationUrl = $"{backendUrl}/api/auth/activate-admin?token={user.AdminActivationToken}";
-        var safeUsername = EscapeHtml(user.Username);
-        var safeActivationUrl = EscapeHtml(activationUrl);
-        var emailBody = $@"
-        <div style='font-family:Arial,Helvetica,sans-serif;background:#120b09;padding:28px 12px;'>
-          <div style='max-width:680px;margin:0 auto;background:#fffaf0;border:1px solid #f2c36b;border-radius:18px;overflow:hidden;'>
-            <div style='background:#17386c;color:#fff;padding:28px;'>
-              <div style='font-size:12px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:#ffd87a;'>Los Rubios Rojos</div>
-              <h1 style='margin:12px 0 0;font-size:32px;line-height:1.1;'>Activacion de rol administrador</h1>
-            </div>
-            <div style='padding:30px 28px;color:#291817;'>
-              <p style='margin:0 0 16px;font-size:18px;line-height:1.6;'>Hola <strong>{safeUsername}</strong>,</p>
-              <p style='margin:0 0 22px;font-size:16px;line-height:1.7;color:#4b2a25;'>Un administrador autorizo activar permisos de administracion para tu cuenta.</p>
-              <div style='text-align:center;margin:28px 0;'>
-                <a href='{safeActivationUrl}' style='display:inline-block;background:#a91010;color:#ffffff;text-decoration:none;font-size:16px;font-weight:800;padding:15px 30px;border-radius:999px;'>Activar rol admin</a>
-              </div>
-              <p style='margin:20px 0 8px;font-size:14px;color:#6a4943;'>Si el boton no abre, copia este enlace:</p>
-              <p style='margin:0;word-break:break-all;font-size:13px;line-height:1.6;color:#1f4e97;'>{safeActivationUrl}</p>
-            </div>
-          </div>
-        </div>";
-
-        try
-        {
-            await _email.SendEmailAsync(user.Email, "Los Rubios Rojos - activa tu rol admin", emailBody);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error sending admin activation email: {ex.Message}");
-        }
-
-        return AuthResponseDto.SuccessResponse("Solicitud enviada. El usuario debe activar el rol admin desde el enlace enviado a su correo.");
-    }
-
-    public async Task<AuthResponseDto> ActivateAdminRole(string token)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-            return AuthResponseDto.Fail("Token de activacion admin requerido");
-
-        var user = await _users.GetByAdminActivationToken(token);
-
-        if (user == null || !user.AdminActivationTokenExpiresAt.HasValue || user.AdminActivationTokenExpiresAt.Value <= DateTime.UtcNow)
-            return AuthResponseDto.Fail("Token de activacion admin invalido o expirado");
-
-        if (!user.EmailConfirmed)
-            return AuthResponseDto.Fail("Debes verificar tu correo antes de activar el rol admin");
-
-        user.Role = RoleNames.Admin;
-        user.PendingRole = null;
-        user.AdminActivationToken = null;
-        user.AdminActivationTokenExpiresAt = null;
-        user.AdminActivationRequestedAt = null;
-        user.AdminActivationRequestedBy = null;
-
-        await _users.Update(user);
-
-        return AuthResponseDto.SuccessResponse("Rol admin activado correctamente. Inicia sesion nuevamente para obtener tus permisos.");
+        return AuthResponseDto.SuccessResponse("Rol del usuario actualizado correctamente.");
     }
 
     public async Task<AuthResponseDto> ForgotPassword(string email)

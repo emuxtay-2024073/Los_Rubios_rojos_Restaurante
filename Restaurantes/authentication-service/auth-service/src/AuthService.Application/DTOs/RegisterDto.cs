@@ -13,10 +13,4 @@ public class RegisterDto
 
     /// <summary>Contraseña que el usuario desea usar.</summary>
     public string Password { get; set; } = string.Empty;
-
-    /// <summary>Rol del usuario. Si se omite, se asigna <c>USER</c>.</summary>
-    public string Role { get; set; } = string.Empty;
-
-    /// <summary>Clave secreta opcional. No es necesaria para solicitar el rol de administrador.</summary>
-    public string SecretKey { get; set; } = string.Empty;
 }

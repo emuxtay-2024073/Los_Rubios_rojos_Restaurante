@@ -39,7 +39,6 @@ const publicAuthEndpoints = [
   '/auth/login',
   '/auth/register',
   '/auth/verify-email',
-  '/auth/activate-admin',
   '/auth/forgot-password',
   '/auth/reset-password',
 ];

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useAuthStore } from '../../auth/store/authStore.js';
 import { useUserManagementStore } from '../../auth/store/useUserManagementStore.js';
 import { Spinner } from '../../auth/components/Spinner.jsx';
 import { CreateUserModal } from './CreateUserModal.jsx';
@@ -7,7 +8,9 @@ import { showError, showSuccess } from '../../../shared/utils/toast.js';
 const PAGE_SIZE = 8;
 
 export const Users = () => {
-  const { users, loading, error, getAllUsers, createUser, promoteUserToAdmin } = useUserManagementStore();
+  const { users, loading, error, getAllUsers, createUser, updateUserRole } = useUserManagementStore();
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.role?.toUpperCase() === 'SUPER_ADMIN';
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [page, setPage] = useState(1);
@@ -58,22 +61,25 @@ export const Users = () => {
     return false;
   };
 
-  const handlePromote = async (user) => {
+  const handleUpdateUserRole = async (user, nextRole) => {
+    const currentRole = (user.role || 'USER').toUpperCase();
+    if (currentRole === nextRole) return;
+
     if (!user.verified && !user.emailConfirmed) {
-      showError('El usuario debe verificar su correo antes de ser admin');
+      showError('El usuario debe verificar su correo antes de cambiar su rol');
       return;
     }
 
-    const ok = window.confirm(`Convertir a ${user.email} en administrador?`);
+    const ok = window.confirm(`Cambiar el rol de ${user.email} de ${currentRole} a ${nextRole}?`);
     if (!ok) return;
 
-    const res = await promoteUserToAdmin(user._id || user.id);
+    const res = await updateUserRole(user._id || user.id, nextRole);
     if (res.success) {
-      showSuccess('Solicitud enviada. El usuario debe activar admin desde su correo.');
+      showSuccess(`Rol actualizado a ${nextRole}.`);
       return;
     }
 
-    showError(res.error || 'No se pudo promover usuario');
+    showError(res.error || 'No se pudo actualizar el rol del usuario');
   };
 
   if (loading && users.length === 0) return <Spinner />;
@@ -114,7 +120,8 @@ export const Users = () => {
           >
             <option value='ALL'>Todos los roles</option>
             <option value='ADMIN'>ADMIN</option>
-            <option value='CLIENTE'>CLIENTE</option>
+            <option value='USER'>USER</option>
+            <option value='SUPER_ADMIN'>SUPER_ADMIN</option>
           </select>
         </div>
       </div>
@@ -148,15 +155,27 @@ export const Users = () => {
                     <td className='px-4 py-3 font-medium text-gray-800'>{u.email || '-'}</td>
                     <td className='px-4 py-3 text-gray-700'>@{u.username}</td>
                     <td className='px-4 py-3'>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          u.role === 'ADMIN'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {u.role}
-                      </span>
+                      {isSuperAdmin && u.role?.toUpperCase() !== 'SUPER_ADMIN' ? (
+                        <select
+                          value={(u.role || 'USER').toUpperCase()}
+                          onChange={(e) => handleUpdateUserRole(u, e.target.value)}
+                          disabled={loading}
+                          className='rounded-lg border px-3 py-2 text-sm text-gray-800'
+                        >
+                          <option value='USER'>USER</option>
+                          <option value='ADMIN'>ADMIN</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {u.role?.toUpperCase() || 'USER'}
+                        </span>
+                      )}
                     </td>
                     <td className='px-4 py-3'>
                       <span
@@ -170,16 +189,11 @@ export const Users = () => {
                       </span>
                     </td>
                     <td className='px-4 py-3'>
-                      {!isAdmin && (
-                        <button
-                          type='button'
-                          onClick={() => handlePromote(u)}
-                          disabled={!isVerified || loading}
-                          className='rounded-full bg-main-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300'
-                        >
-                          Hacer admin
-                        </button>
-                      )}
+                      {u.role?.toUpperCase() === 'SUPER_ADMIN' ? (
+                        <span className='text-xs text-gray-500'>Protegido</span>
+                      ) : isSuperAdmin ? (
+                        <span className='text-xs text-gray-600'>Editar rol</span>
+                      ) : null}
                     </td>
                   </tr>
                   );

@@ -8,15 +8,12 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
     handleSubmit,
     getValues,
     reset,
-    control,
     formState: { errors },
-  } = useForm({ defaultValues: { role: 'CLIENTE' } });
-
-  const selectedRole = useWatch({ control, name: 'role', defaultValue: 'CLIENTE' });
+  } = useForm();
 
   useEffect(() => {
     if (!isOpen) {
-      reset({ role: 'CLIENTE' });
+      reset();
     }
   }, [isOpen, reset]);
 
@@ -27,7 +24,6 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
       username: values.username,
       email: values.email,
       password: values.password,
-      role: values.role || 'CLIENTE',
     });
 
     if (ok) {
@@ -71,16 +67,6 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
               {errors.username && <p className='text-red-600 text-xs'>{errors.username.message}</p>}
             </div>
 
-            <div>
-              <label className='block text-sm font-semibold text-gray-700 mb-1'>Rol</label>
-              <select
-                {...register('role')}
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
-              >
-                <option value='CLIENTE'>Cliente</option>
-                <option value='ADMIN'>Administrador</option>
-              </select>
-            </div>
           </div>
 
           <div>
@@ -141,11 +127,6 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
             </div>
           </div>
 
-          {selectedRole === 'ADMIN' && (
-            <div className='rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900'>
-              Este usuario recibira un correo de verificacion. No podra entrar como admin hasta confirmar su correo.
-            </div>
-          )}
 
           {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
 
@@ -153,7 +134,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
             <button
               type='button'
               onClick={() => {
-                reset({ role: 'CLIENTE' });
+                reset();
                 onClose();
               }}
               className='w-full sm:w-auto px-5 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition'

@@ -2,8 +2,10 @@ namespace AuthService.Application.Utilities;
 
 public static class RoleNames
 {
-    public const string Cliente = "CLIENTE";
+    public const string User = "USER";
     public const string Admin = "ADMIN";
+    public const string SuperAdmin = "SUPER_ADMIN";
+
     public static string? Normalize(string? role)
     {
         if (string.IsNullOrWhiteSpace(role))
@@ -11,20 +13,16 @@ public static class RoleNames
             return null;
         }
 
-        return role.Trim().ToLowerInvariant() switch
+        return role.Trim().ToUpperInvariant() switch
         {
-            "cliente" => Cliente,
-            "user" => Cliente,
-            "user_role" => Cliente, 
-            "adminrestaurante" => Admin,
-            "admin" => Admin,
+            "CLIENTE" => User,
+            "USER" => User,
+            "USER_ROLE" => User,
+            "ADMIN" => Admin,
+            "SUPER_ADMIN" => SuperAdmin,
+            "SUPERADMIN" => SuperAdmin,
+            "SUPER ADMIN" => SuperAdmin,
             _ => null
         };
-    }
-
-    public static bool IsValidAdminSecret(string? secretKey, string? expectedSecret)
-    {
-        return !string.IsNullOrWhiteSpace(expectedSecret) &&
-            string.Equals(secretKey?.Trim(), expectedSecret.Trim(), StringComparison.Ordinal);
     }
 }

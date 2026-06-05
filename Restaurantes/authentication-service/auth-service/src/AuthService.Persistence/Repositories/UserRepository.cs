@@ -32,9 +32,6 @@ public class UserRepository : IUserRepository
     public Task<User?> GetByVerificationToken(string token) =>
         _context.Users.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
 
-    public Task<User?> GetByAdminActivationToken(string token) =>
-        _context.Users.FirstOrDefaultAsync(u => u.AdminActivationToken == token);
-
     public Task<User?> GetByResetToken(string token) =>
         _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
 

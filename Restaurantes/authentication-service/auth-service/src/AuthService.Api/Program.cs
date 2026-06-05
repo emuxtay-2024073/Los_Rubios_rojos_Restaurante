@@ -127,6 +127,7 @@ builder.Services
     {
         options.RequireHttpsMetadata = false;
         options.SaveToken = true;
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -142,6 +143,8 @@ builder.Services
             NameClaimType = JwtRegisteredClaimNames.UniqueName
         };
     });
+
+builder.Services.AddAuthorization();
 
 // ====================
 // Rate Limiting

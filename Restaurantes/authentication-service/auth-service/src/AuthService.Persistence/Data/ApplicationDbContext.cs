@@ -42,20 +42,11 @@ public class ApplicationDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
 
-            entity.Property(u => u.PendingRole)
-                .HasMaxLength(50);
-
             entity.Property(u => u.EmailConfirmed)
                 .IsRequired();
 
             // 🔹 Tokens (opcional pero correcto)
             entity.Property(u => u.EmailVerificationToken)
-                .HasMaxLength(200);
-
-            entity.Property(u => u.AdminActivationToken)
-                .HasMaxLength(200);
-
-            entity.Property(u => u.AdminActivationRequestedBy)
                 .HasMaxLength(200);
 
             entity.Property(u => u.PasswordResetToken)

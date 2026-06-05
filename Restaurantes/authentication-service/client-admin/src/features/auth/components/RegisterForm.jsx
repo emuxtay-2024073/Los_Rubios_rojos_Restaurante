@@ -15,10 +15,9 @@ export const RegisterForm = ({ onLogin }) => {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm({ defaultValues: { role: 'CLIENTE' } });
+  } = useForm();
 
   const password = useWatch({ control, name: 'password', defaultValue: '' });
-  const selectedRole = useWatch({ control, name: 'role', defaultValue: 'CLIENTE' });
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirmPassword) {
@@ -29,7 +28,6 @@ export const RegisterForm = ({ onLogin }) => {
       username: data.username,
       email: data.email,
       password: data.password,
-      role: selectedRole === 'ADMIN' ? 'ADMIN' : 'CLIENTE',
     };
 
     const { success, message, verificationUrl: link } = await registerUser(payload);
@@ -119,33 +117,6 @@ export const RegisterForm = ({ onLogin }) => {
         {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
       </div>
 
-      <div className='grid gap-3 sm:grid-cols-2'>
-        <label className='flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3'>
-          <input
-            type='radio'
-            value='CLIENTE'
-            {...register('role')}
-            className='h-4 w-4 text-main-blue'
-            defaultChecked
-          />
-          <span className='text-sm font-medium text-gray-900'>Cliente</span>
-        </label>
-        <label className='flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3'>
-          <input
-            type='radio'
-            value='ADMIN'
-            {...register('role')}
-            className='h-4 w-4 text-main-blue'
-          />
-          <span className='text-sm font-medium text-gray-900'>Administrador</span>
-        </label>
-      </div>
-
-      {selectedRole === 'ADMIN' && (
-        <div className='rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900'>
-          Al seleccionar administrador, tu cuenta se registrará como cliente y se activará como admin solo después de verificar tu correo.
-        </div>
-      )}
 
       {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
       {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}

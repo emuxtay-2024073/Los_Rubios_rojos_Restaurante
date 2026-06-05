@@ -16,8 +16,12 @@ export const createUser = async (data) => {
   return await axiosAuth.post('/auth/register', data);
 };
 
+export const updateUserRole = async (id, data) => {
+  return await axiosAuth.patch(`/auth/users/${id}/role`, data);
+};
+
 export const promoteUserToAdmin = async (id) => {
-  return await axiosAuth.patch(`/auth/users/${id}/promote`);
+  return await updateUserRole(id, { role: 'ADMIN' });
 };
 
 export const register = async (data) => {
@@ -26,10 +30,6 @@ export const register = async (data) => {
 
 export const verifyEmail = async (token) => {
   return await axiosAuth.post('/auth/verify-email', null, { params: { token } });
-};
-
-export const activateAdminRole = async (token) => {
-  return await axiosAuth.post('/auth/activate-admin', null, { params: { token } });
 };
 
 export const resendVerification = async (email) => {

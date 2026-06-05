@@ -45,7 +45,7 @@ public class AuthController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = RoleNames.SuperAdmin)]
     [HttpGet("users")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -60,17 +60,19 @@ public class AuthController : ControllerBase
         });
     }
 
-    [Authorize(Roles = "ADMIN")]
-    [HttpPatch("users/{id}/promote")]
+    [Authorize(Roles = RoleNames.SuperAdmin)]
+    [HttpPatch("users/{id}/role")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> PromoteUserToAdmin([FromRoute] string id)
+    public async Task<IActionResult> UpdateUserRole([FromRoute] string id, [FromBody] UpdateUserRoleDto dto)
     {
-        var requestedBy = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        var result = await _auth.RequestAdminActivation(id, requestedBy);
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Role))
+            return BadRequest(new AuthResponseDto { Success = false, Message = "El rol es requerido" });
+
+        var result = await _auth.UpdateUserRole(id, dto.Role);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -105,37 +107,6 @@ public class AuthController : ControllerBase
             return BadRequest(new AuthResponseDto { Success = false, Message = "El token es requerido" });
 
         var result = await _auth.VerifyEmail(token);
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
-
-    [HttpGet("activate-admin")]
-    public async Task<IActionResult> ActivateAdminGet([FromQuery] string token)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            var errorIcon = "<div class=\"icon error\">✕</div>";
-            return Content(GetHtmlPage("Error de activación", "El token es requerido.", errorIcon), "text/html");
-        }
-
-        var result = await _auth.ActivateAdminRole(token);
-
-        if (result.Success)
-        {
-            var successIcon = "<div class=\"icon success\">✓</div>";
-            var body = result.Message ?? "Tu rol de administrador ha sido activado correctamente. Puedes iniciar sesión ahora.";
-            return Content(GetHtmlPage("¡Admin activado!", body, $"{successIcon}{GetFrontendLoginLink()}"), "text/html");
-        }
-
-        var failIcon = "<div class=\"icon error\">✕</div>";
-        return Content(GetHtmlPage("Error al activar admin", result.Message ?? "No se pudo activar el rol de admin.", failIcon), "text/html");
-    }
-
-    [HttpPost("activate-admin")]
-    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ActivateAdminRole([FromQuery] string token)
-    {
-        var result = await _auth.ActivateAdminRole(token);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

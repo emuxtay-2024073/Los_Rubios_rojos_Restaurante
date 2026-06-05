@@ -70,7 +70,7 @@ export const useAuthStore = create(
           }
 
           const claims = parseJwt(token) || {};
-          const role = claims?.role || 'CLIENTE';
+          const role = claims?.role || 'USER';
 
           set({
             user: {

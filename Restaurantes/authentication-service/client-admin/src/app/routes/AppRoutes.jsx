@@ -5,12 +5,12 @@ import { ProtectedRoutes } from './ProtectedRoutes.jsx';
 import { UnauthorizedPage } from '../../features/auth/pages/UnauthorizedPage.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
 import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
-import { ActivateAdminPage } from '../../features/auth/pages/ActivateAdminPage.jsx';
 import { Dashboard } from '../../pages/Dashboard.jsx';
 import { Restaurants } from '../../pages/Restaurants.jsx';
 import { Tables } from '../../pages/Tables.jsx';
 import { Menus } from '../../pages/Menus.jsx';
 import { Orders } from '../../pages/Orders.jsx';
+import { Users } from '../../features/users/components/Users.jsx';
 import { Reservations } from '../../pages/Reservations.jsx';
 import { Reviews } from '../../pages/Reviews.jsx';
 import { ClientPage } from '../../pages/client/ClientPage.jsx';
@@ -38,13 +38,12 @@ export const AppRoutes = () => {
       </Route>
       <Route path='/login' element={<AuthPage />} />
       <Route path='/verify-email' element={<VerifyEmailPage />} />
-      <Route path='/activate-admin' element={<ActivateAdminPage />} />
       <Route path='/unauthorized' element={<UnauthorizedPage />} />
       <Route
         path='/dashboard/*'
         element={
           <ProtectedRoutes>
-            <RoleGuard allowedRoles={['ADMIN', 'ADMIN_ROLE']}>
+            <RoleGuard allowedRoles={['ADMIN', 'SUPER_ADMIN', 'ADMIN_ROLE']}>
               <DashboardPage />
             </RoleGuard>
           </ProtectedRoutes>
@@ -56,6 +55,11 @@ export const AppRoutes = () => {
         <Route path='menus' element={<Menus />} />
         <Route path='orders' element={<Orders />} />
         <Route path='reservations' element={<Reservations />} />
+        <Route path='users' element={
+          <RoleGuard allowedRoles={['SUPER_ADMIN']}>
+            <Users />
+          </RoleGuard>
+        } />
         <Route path='reviews' element={<Reviews />} />
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Route>
