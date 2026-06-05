@@ -1,7 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
 export const Sidebar = () => {
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.role?.toUpperCase() === 'SUPER_ADMIN';
 
   const items = [
     { label: 'Dashboard', to: '/dashboard' },
@@ -11,6 +14,7 @@ export const Sidebar = () => {
     { label: 'Órdenes', to: '/dashboard/orders' },
     { label: 'Reservaciones', to: '/dashboard/reservations' },
     { label: 'Reseñas', to: '/dashboard/reviews' },
+    ...(isSuperAdmin ? [{ label: 'Usuarios', to: '/dashboard/users' }] : []),
   ];
 
   const isActive = (itemTo) => {

@@ -3,6 +3,7 @@ import {
   createUser as createUserRequest,
   getAllUsers as getAllUsersRequest,
   promoteUserToAdmin as promoteUserToAdminRequest,
+  updateUserRole as updateUserRoleRequest,
 } from '../../../shared/apis';
 
 export const useUserManagementStore = create((set, get) => ({
@@ -32,12 +33,26 @@ export const useUserManagementStore = create((set, get) => ({
   promoteUserToAdmin: async (id) => {
     try {
       set({ loading: true, error: null });
-      await promoteUserToAdminRequest(id);
+      await promoteUserToAdminRequest(id, { role: 'ADMIN' });
       set({ loading: false });
       await get().getAllUsers(undefined, { force: true });
       return { success: true };
     } catch (err) {
       const message = err.response?.data?.message || 'Error al promover usuario';
+      set({ error: message, loading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  updateUserRole: async (id, role) => {
+    try {
+      set({ loading: true, error: null });
+      await updateUserRoleRequest(id, { role });
+      set({ loading: false });
+      await get().getAllUsers(undefined, { force: true });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Error al actualizar rol de usuario';
       set({ error: message, loading: false });
       return { success: false, error: message };
     }

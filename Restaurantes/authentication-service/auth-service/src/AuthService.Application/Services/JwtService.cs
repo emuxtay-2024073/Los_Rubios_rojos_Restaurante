@@ -39,7 +39,7 @@ public class JwtService : IJwtService
             new(JwtRegisteredClaimNames.Sub, user.Id),
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new("role", RoleNames.Normalize(user.Role) ?? RoleNames.Cliente),
+            new("role", RoleNames.Normalize(user.Role) ?? RoleNames.User),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

@@ -17,7 +17,7 @@ public static class DefaultAdminSeeder
         var username = NormalizeValue(configuration["SeedAdmin:Username"], DefaultUsername);
         var email = NormalizeValue(configuration["SeedAdmin:Email"], DefaultEmail);
         var password = configuration["SeedAdmin:Password"]?.Trim();
-        var role = RoleNames.Normalize(configuration["SeedAdmin:Role"]) ?? RoleNames.Admin;
+        var role = RoleNames.Normalize(configuration["SeedAdmin:Role"]) ?? RoleNames.SuperAdmin;
 
         if (string.IsNullOrWhiteSpace(password))
         {
