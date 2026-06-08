@@ -57,12 +57,18 @@ export const Tables = () => {
   };
 
   useEffect(() => {
-    loadRestaurants();
+    const load = async () => {
+      await loadRestaurants();
+    };
+    load();
   }, []);
 
   useEffect(() => {
     if (selectedRestaurantId) {
-      loadTables(selectedRestaurantId);
+      const load = async () => {
+        await loadTables(selectedRestaurantId);
+      };
+      load();
     }
   }, [selectedRestaurantId]);
 
@@ -141,16 +147,17 @@ export const Tables = () => {
   if (loading) return <Spinner />;
 
   return (
-    <div className='space-y-8'>
+    <div className='admin-page space-y-8'>
       <div className='flex flex-col gap-4 md:flex-row md:justify-between md:items-end'>
         <div>
-          <p className='text-sm text-gray-500'>Operación de mesas</p>
-          <h1 className='text-3xl font-bold text-main-blue'>Mesas</h1>
+          <p className='admin-kicker'>Operación de mesas</p>
+          <h1 className='admin-title mt-2'>Mesas</h1>
+          <p className='admin-subtitle mt-2 text-sm'>Control de capacidad y disponibilidad por restaurante.</p>
         </div>
         <select
           value={selectedRestaurantId}
           onChange={(event) => setSelectedRestaurantId(event.target.value)}
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm font-semibold'
         >
           {restaurants.map((restaurant) => (
             <option key={restaurant._id} value={restaurant._id}>
@@ -160,7 +167,7 @@ export const Tables = () => {
         </select>
       </div>
 
-      <form onSubmit={handleSubmit} className='grid gap-4 sm:grid-cols-3'>
+      <form onSubmit={handleSubmit} className='admin-panel grid gap-4 p-5 sm:grid-cols-3'>
         <input
           type='number'
           required
@@ -169,7 +176,7 @@ export const Tables = () => {
           placeholder='Número de mesa'
           value={form.number}
           onChange={(event) => setForm({ ...form, number: event.target.value })}
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm'
         />
         {formErrors.number && <p className='text-xs text-red-600'>{formErrors.number}</p>}
         <input
@@ -181,17 +188,18 @@ export const Tables = () => {
           placeholder='Capacidad'
           value={form.capacity}
           onChange={(event) => setForm({ ...form, capacity: event.target.value })}
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm'
         />
         {formErrors.capacity && <p className='text-xs text-red-600'>{formErrors.capacity}</p>}
-        <button className='rounded-3xl bg-main-blue px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90'>
+        <button className='admin-button-primary px-6 py-3 text-sm'>
           {activeTable ? 'Actualizar mesa' : 'Agregar mesa'}
         </button>
       </form>
 
-      <div className='overflow-x-auto rounded-3xl border border-gray-200 bg-white shadow-sm'>
-        <table className='min-w-full border-collapse text-left'>
-          <thead className='bg-slate-50 text-sm text-slate-600'>
+      <div className='admin-panel overflow-hidden'>
+        <div className='overflow-x-auto'>
+        <table className='admin-table min-w-full text-left'>
+          <thead className='text-sm'>
             <tr>
               <th className='px-5 py-4'>#</th>
               <th className='px-5 py-4'>Capacidad</th>
@@ -201,11 +209,11 @@ export const Tables = () => {
           </thead>
           <tbody>
             {filteredTables.map((table) => (
-              <tr key={table._id} className='border-t border-gray-100 hover:bg-slate-50'>
+              <tr key={table._id} className='border-t border-[#7C2D12]/10'>
                 <td className='px-5 py-4'>{table.number}</td>
                 <td className='px-5 py-4'>{table.capacity}</td>
                 <td className='px-5 py-4'>
-                  <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${table.status === 'disponible' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                  <span className={`admin-status ${table.status === 'disponible' ? 'admin-status-success' : 'admin-status-danger'}`}>
                     {table.status || 'desconocido'}
                   </span>
                 </td>
@@ -214,14 +222,14 @@ export const Tables = () => {
                     <button
                       type='button'
                       onClick={() => handleEdit(table)}
-                      className='rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200'
+                      className='admin-button-secondary px-4 py-2 text-sm'
                     >
                       Editar
                     </button>
                     <button
                       type='button'
                       onClick={() => handleDelete(table)}
-                      className='rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700'
+                      className='admin-button-danger px-4 py-2 text-sm'
                     >
                       Desactivar
                     </button>
@@ -238,6 +246,7 @@ export const Tables = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

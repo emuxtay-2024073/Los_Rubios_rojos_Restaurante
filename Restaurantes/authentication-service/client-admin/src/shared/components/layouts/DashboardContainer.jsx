@@ -3,13 +3,15 @@ import { Sidebar } from './Sidebar.jsx';
 
 export const DashboardContainer = ({ user, onLogout, children }) => {
   return (
-    <div className='min-h-screen bg-gray-50 flex flex-col'>
+    <div className='admin-shell flex min-h-screen flex-col'>
       <Navbar user={user} onLogout={onLogout} />
 
-      <div className='flex flex-col md:flex-row flex-1'>
+      <div className='flex flex-1 flex-col md:flex-row'>
         <Sidebar />
 
-        <main className='flex-1 p-6 overflow-x-hidden'>{children}</main>
+        <main className='admin-main flex-1 overflow-x-hidden px-4 py-5 sm:px-6 lg:px-8 lg:py-8'>
+          {children}
+        </main>
       </div>
     </div>
   );

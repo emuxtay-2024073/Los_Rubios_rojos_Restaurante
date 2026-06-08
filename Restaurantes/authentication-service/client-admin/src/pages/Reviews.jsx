@@ -54,12 +54,18 @@ export const Reviews = () => {
   };
 
   useEffect(() => {
-    loadRestaurants();
+    const load = async () => {
+      await loadRestaurants();
+    };
+    load();
   }, []);
 
   useEffect(() => {
     if (selectedRestaurantId) {
-      loadReviews(selectedRestaurantId);
+      const load = async () => {
+        await loadReviews(selectedRestaurantId);
+      };
+      load();
     }
   }, [selectedRestaurantId]);
 
@@ -85,16 +91,17 @@ export const Reviews = () => {
   if (loading) return <Spinner />;
 
   return (
-    <div className='space-y-8'>
+    <div className='admin-page space-y-8'>
       <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
         <div>
-          <p className='text-sm text-gray-500'>Reseñas por restaurante</p>
-          <h1 className='text-3xl font-bold text-main-blue'>Reseñas</h1>
+          <p className='admin-kicker'>Reseñas por restaurante</p>
+          <h1 className='admin-title mt-2'>Reseñas</h1>
+          <p className='admin-subtitle mt-2 text-sm'>Monitorea reputación, comentarios y calificaciones recientes.</p>
         </div>
         <select
           value={selectedRestaurantId}
           onChange={(event) => setSelectedRestaurantId(event.target.value)}
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm font-semibold'
         >
           {restaurants.map((restaurant) => (
             <option key={restaurant._id} value={restaurant._id}>
@@ -105,34 +112,34 @@ export const Reviews = () => {
       </div>
 
       <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
-        <article className='rounded-3xl border border-gray-200 bg-white p-6 shadow-sm'>
-          <p className='text-sm text-gray-500'>Total reseñas</p>
-          <p className='mt-2 text-3xl font-semibold text-slate-900'>{reviews.length}</p>
+        <article className='admin-card p-6'>
+          <p className='text-sm font-bold text-[#6B7280]'>Total reseñas</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{reviews.length}</p>
         </article>
-        <article className='rounded-3xl border border-gray-200 bg-white p-6 shadow-sm'>
-          <p className='text-sm text-gray-500'>Promedio</p>
-          <p className='mt-2 text-3xl font-semibold text-slate-900'>{averageRating}/5</p>
+        <article className='admin-card p-6'>
+          <p className='text-sm font-bold text-[#6B7280]'>Promedio</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{averageRating}/5</p>
         </article>
         <input
           type='search'
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder='Buscar cliente o comentario'
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm'
         />
       </div>
 
       <div className='grid gap-5'>
         {filteredReviews.length === 0 ? (
-          <div className='rounded-3xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm'>
+          <div className='admin-panel p-8 text-center text-sm font-semibold text-[#6B7280]'>
             No hay reseñas registradas.
           </div>
         ) : (
           filteredReviews.map((review) => (
-            <article key={review._id} className='rounded-3xl border border-gray-200 bg-white p-6 shadow-sm'>
+            <article key={review._id} className='admin-card p-6'>
               <div className='flex flex-col gap-3 md:flex-row md:items-start md:justify-between'>
                 <div>
-                  <h2 className='text-xl font-semibold text-slate-900'>
+                  <h2 className='text-xl font-black text-[#1F2937]'>
                     Calificacion: {review.rating ?? 'N/A'}/5
                   </h2>
                   <p className='mt-2 text-sm text-gray-500'>
@@ -140,11 +147,11 @@ export const Reviews = () => {
                   </p>
                   <p className='mt-1 text-xs text-gray-500'>{formatDate(review.createdAt)}</p>
                 </div>
-                <span className='rounded-full bg-surface-soft px-3 py-1 text-sm font-semibold text-main-blue'>
+                <span className='admin-status admin-status-warning'>
                   ID {review._id.slice(-6)}
                 </span>
               </div>
-              <p className='mt-4 text-sm leading-6 text-slate-600'>{review.comment || 'Sin comentario'}</p>
+              <p className='mt-4 text-sm leading-6 text-[#6B7280]'>{review.comment || 'Sin comentario'}</p>
             </article>
           ))
         )}

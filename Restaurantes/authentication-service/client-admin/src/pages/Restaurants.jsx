@@ -3,6 +3,15 @@ import { createRestaurant, deleteRestaurant, getRestaurants, updateRestaurant } 
 import { Spinner } from '../features/auth/components/Spinner.jsx';
 import { showError, showSuccess } from '../shared/utils/toast.js';
 import { resolveCloudinaryImageUrl } from '../shared/utils/formatters.js';
+import {
+  BuildingStorefrontIcon,
+  ClockIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 
 const emptyRestaurant = {
   name: '',
@@ -47,7 +56,10 @@ export const Restaurants = () => {
   };
 
   useEffect(() => {
-    loadRestaurants();
+    const load = async () => {
+      await loadRestaurants();
+    };
+    load();
   }, []);
 
   const filteredRestaurants = useMemo(
@@ -168,85 +180,112 @@ export const Restaurants = () => {
   if (loading) return <Spinner />;
 
   return (
-    <div className='space-y-8'>
+    <div className='admin-page space-y-8'>
       <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
         <div>
-          <p className='text-sm text-gray-500'>Gestion operativa</p>
-          <h1 className='text-3xl font-bold text-main-blue'>Restaurantes</h1>
+          <p className='admin-kicker'>Gestión operativa</p>
+          <h1 className='admin-title mt-2'>Restaurantes</h1>
+          <p className='admin-subtitle mt-2 text-sm'>Administra ubicaciones, capacidad, horarios y responsables por local.</p>
         </div>
         <button
           type='button'
           onClick={() => handleOpenModal(null)}
-          className='rounded-full bg-main-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90'
+          className='admin-button-primary px-5 py-3 text-sm'
         >
-          + Nuevo restaurante
+          <PlusIcon className='h-5 w-5' />
+          Nuevo restaurante
         </button>
       </div>
 
-      <input
-        type='search'
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder='Buscar restaurante, ciudad o direccion'
-        className='w-full max-w-lg rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-main-blue focus:outline-none'
-      />
+      <section className='admin-panel p-5'>
+        <label className='relative block max-w-2xl'>
+          <MagnifyingGlassIcon className='pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B7280]' />
+          <input
+            type='search'
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder='Buscar restaurante, ciudad o dirección'
+            className='admin-input w-full px-11 py-3 text-sm'
+          />
+        </label>
+      </section>
 
       <div className='grid gap-5 md:grid-cols-2 xl:grid-cols-3'>
-        {filteredRestaurants.map((restaurant) => (
-          <article key={restaurant._id} className='rounded-3xl border border-gray-200 bg-white p-6 shadow-sm'>
-            {restaurant.image && (
+        {filteredRestaurants.map((restaurant, index) => (
+          <article
+            key={restaurant._id}
+            className='admin-card overflow-hidden'
+            style={{ animation: `adminRise 360ms ease ${index * 50}ms both` }}
+          >
+            <div className='relative h-56 overflow-hidden bg-[#FFF7ED]'>
               <img
-                src={resolveCloudinaryImageUrl(restaurant.image)}
+                src={restaurant.image ? resolveCloudinaryImageUrl(restaurant.image) : '/placeholder-image.svg'}
                 alt={restaurant.name}
-                className='mb-4 h-48 w-full rounded-3xl object-cover'
+                className='h-full w-full object-cover transition duration-300 hover:scale-105'
                 onError={(event) => {
                   event.currentTarget.src = '/placeholder-image.svg';
                 }}
               />
-            )}
-            <h2 className='text-xl font-semibold text-slate-900'>{restaurant.name}</h2>
-            <p className='mt-2 text-sm text-gray-500'>{restaurant.city || 'N/A'}</p>
-            <p className='mt-4 text-sm text-slate-600'>{restaurant.address || 'Sin direccion'}</p>
-            <div className='mt-2 text-sm text-slate-600'>
-              <p><strong>Telefono:</strong> {restaurant.phone || 'N/A'}</p>
-              <p><strong>Capacidad:</strong> {restaurant.capacity ?? 'N/A'} personas</p>
-              {restaurant.openingHours && <p><strong>Horario:</strong> {restaurant.openingHours}</p>}
+              <div className='absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-black text-[#DC2626] shadow'>
+                {restaurant.city || 'N/A'}
+              </div>
             </div>
-            <div className='mt-5 flex flex-wrap gap-2'>
-              <button
-                type='button'
-                onClick={() => handleOpenModal(restaurant)}
-                className='rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200'
-              >
-                Editar
-              </button>
-              <button
-                type='button'
-                onClick={() => handleDelete(restaurant._id)}
-                className='rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700'
-              >
-                Desactivar
-              </button>
+            <div className='p-5'>
+              <div className='flex items-start justify-between gap-4'>
+                <div>
+                  <h2 className='text-xl font-black text-[#1F2937]'>{restaurant.name}</h2>
+                  <p className='mt-2 text-sm leading-6 text-[#6B7280]'>{restaurant.address || 'Sin direccion'}</p>
+                </div>
+                <BuildingStorefrontIcon className='h-7 w-7 shrink-0 text-[#DC2626]' />
+              </div>
+              <div className='mt-5 grid gap-3 text-sm text-[#6B7280]'>
+                <div className='flex items-center gap-2 rounded-2xl bg-[#FFF7ED] p-3'>
+                  <UserIcon className='h-5 w-5 text-[#7C2D12]' />
+                  <span><strong className='text-[#1F2937]'>Encargado:</strong> {restaurant.manager || 'N/A'}</span>
+                </div>
+                <div className='flex items-center gap-2 rounded-2xl bg-[#FFF7ED] p-3'>
+                  <ClockIcon className='h-5 w-5 text-[#7C2D12]' />
+                  <span><strong className='text-[#1F2937]'>Horario:</strong> {restaurant.openingHours || 'N/A'}</span>
+                </div>
+                <div className='flex flex-wrap gap-2'>
+                  <span className='admin-status admin-status-neutral'>{restaurant.phone || 'Sin teléfono'}</span>
+                  <span className='admin-status admin-status-warning'>{restaurant.capacity ?? 'N/A'} personas</span>
+                </div>
+              </div>
+              <div className='mt-5 flex flex-wrap gap-2'>
+                <button
+                  type='button'
+                  onClick={() => handleOpenModal(restaurant)}
+                  className='admin-button-secondary px-4 py-2 text-sm'
+                >
+                  <PencilSquareIcon className='h-4 w-4' />
+                  Editar
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleDelete(restaurant._id)}
+                  className='admin-button-danger px-4 py-2 text-sm'
+                >
+                  <TrashIcon className='h-4 w-4' />
+                  Desactivar
+                </button>
+              </div>
             </div>
           </article>
         ))}
       </div>
 
       {modalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4'>
-          <div className='max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl'>
+        <div className='admin-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4'>
+          <div className='admin-panel max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto p-6 shadow-2xl'>
             <div className='flex items-center justify-between gap-4'>
               <div>
-                <p className='text-sm text-gray-500'>Formulario</p>
-                <h2 className='text-2xl font-semibold text-slate-900'>
-                  {activeRestaurant ? 'Editar restaurante' : 'Nueva ubicacion'}
+                <p className='admin-kicker'>Formulario</p>
+                <h2 className='mt-1 text-2xl font-black text-[#1F2937]'>
+                  {activeRestaurant ? 'Editar restaurante' : 'Nueva ubicación'}
                 </h2>
               </div>
-              <button
-                type='button'
-                onClick={() => setModalOpen(false)}
-                className='rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100'
-              >
+              <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary px-4 py-2 text-sm'>
                 Cerrar
               </button>
             </div>
@@ -255,67 +294,67 @@ export const Restaurants = () => {
               {[
                 ['name', 'Nombre', 'text'],
                 ['city', 'Ciudad', 'text'],
-                ['address', 'Direccion', 'text'],
+                ['address', 'Dirección', 'text'],
                 ['manager', 'Encargado', 'text'],
-                ['phone', 'Telefono', 'text'],
-                ['email', 'Correo electronico', 'email'],
+                ['phone', 'Teléfono', 'text'],
+                ['email', 'Correo electrónico', 'email'],
                 ['capacity', 'Capacidad', 'number'],
               ].map(([key, label, type]) => (
                 <label key={key} className='block'>
-                  <span className='text-sm font-medium text-slate-700'>{label}</span>
+                  <span className='text-sm font-bold text-[#1F2937]'>{label}</span>
                   <input
                     type={type}
                     required
                     min={key === 'capacity' ? '1' : undefined}
                     value={form[key] ?? ''}
                     onChange={(event) => setForm({ ...form, [key]: event.target.value })}
-                    className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                    className='admin-input mt-2 w-full px-4 py-3 text-sm'
                   />
-                  {errors[key] && <p className='mt-1 text-xs text-red-600'>{errors[key]}</p>}
+                  {errors[key] && <p className='mt-1 text-xs font-bold text-red-600'>{errors[key]}</p>}
                 </label>
               ))}
 
               <label className='block'>
-                <span className='text-sm font-medium text-slate-700'>Hora de apertura</span>
+                <span className='text-sm font-bold text-[#1F2937]'>Hora de apertura</span>
                 <input
                   type='time'
                   required
                   value={form.openingTime}
                   onChange={(event) => setForm({ ...form, openingTime: event.target.value })}
-                  className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                  className='admin-input mt-2 w-full px-4 py-3 text-sm'
                 />
-                {errors.openingTime && <p className='mt-1 text-xs text-red-600'>{errors.openingTime}</p>}
+                {errors.openingTime && <p className='mt-1 text-xs font-bold text-red-600'>{errors.openingTime}</p>}
               </label>
 
               <label className='block'>
-                <span className='text-sm font-medium text-slate-700'>Hora de cierre</span>
+                <span className='text-sm font-bold text-[#1F2937]'>Hora de cierre</span>
                 <input
                   type='time'
                   required
                   value={form.closingTime}
                   onChange={(event) => setForm({ ...form, closingTime: event.target.value })}
-                  className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                  className='admin-input mt-2 w-full px-4 py-3 text-sm'
                 />
-                {errors.closingTime && <p className='mt-1 text-xs text-red-600'>{errors.closingTime}</p>}
+                {errors.closingTime && <p className='mt-1 text-xs font-bold text-red-600'>{errors.closingTime}</p>}
               </label>
 
               <label className='block sm:col-span-2'>
-                <span className='text-sm font-medium text-slate-700'>Imagen del restaurante</span>
+                <span className='text-sm font-bold text-[#1F2937]'>Imagen del restaurante</span>
                 <input
                   type='file'
                   accept='image/*'
                   onChange={(event) => setForm({ ...form, image: event.target.files?.[0] ?? null })}
-                  className='mt-2 w-full rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+                  className='admin-input mt-2 w-full px-4 py-3 text-sm'
                 />
-                {errors.image && <p className='mt-1 text-xs text-red-600'>{errors.image}</p>}
+                {errors.image && <p className='mt-1 text-xs font-bold text-red-600'>{errors.image}</p>}
                 {form.image && (
                   <div className='mt-3 space-y-2'>
                     <img
                       src={form.image instanceof File ? URL.createObjectURL(form.image) : resolveCloudinaryImageUrl(form.image)}
                       alt='Vista previa del restaurante'
-                      className='h-40 w-full rounded-2xl object-cover'
+                      className='h-44 w-full rounded-2xl object-cover'
                     />
-                    <p className='text-xs text-slate-500'>
+                    <p className='text-xs font-semibold text-[#6B7280]'>
                       {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
                     </p>
                   </div>
@@ -323,14 +362,10 @@ export const Restaurants = () => {
               </label>
 
               <div className='flex justify-end gap-3 pt-2 sm:col-span-2'>
-                <button
-                  type='button'
-                  onClick={() => setModalOpen(false)}
-                  className='rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100'
-                >
+                <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary px-5 py-3 text-sm'>
                   Cancelar
                 </button>
-                <button type='submit' className='rounded-full bg-main-blue px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90'>
+                <button type='submit' className='admin-button-primary px-6 py-3 text-sm'>
                   Guardar
                 </button>
               </div>

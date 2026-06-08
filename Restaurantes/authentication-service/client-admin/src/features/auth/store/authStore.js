@@ -120,6 +120,8 @@ export const useAuthStore = create(
           set({ loading: false });
           return {
             success: true,
+            message: data?.message || data?.Message || 'Usuario registrado correctamente.',
+            verificationUrl: data?.verificationUrl || data?.VerificationUrl,
             emailVerificationRequired: data?.emailVerificationRequired,
             data,
           };

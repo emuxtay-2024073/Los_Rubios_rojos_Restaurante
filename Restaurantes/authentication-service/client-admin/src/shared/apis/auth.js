@@ -28,6 +28,10 @@ export const register = async (data) => {
   return await axiosAuth.post('/auth/register', data);
 };
 
+export const forgotPassword = async (email) => {
+  return await axiosAuth.post('/auth/forgot-password', null, { params: { email } });
+};
+
 export const verifyEmail = async (token) => {
   return await axiosAuth.post('/auth/verify-email', null, { params: { token } });
 };

@@ -6,7 +6,7 @@ const normalizeResponse = (data, key) => {
   return [];
 };
 
-const formDataConfig = (payload) => {
+const formDataConfig = () => {
   // Si el payload es FormData, no mandamos config extra.
   // El interceptor `addAuthHeaders` ya quita Content-Type cuando detecta FormData.
   return undefined;
