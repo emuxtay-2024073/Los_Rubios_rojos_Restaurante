@@ -27,6 +27,7 @@ export const App = () => {
         }}
       />
       <AppRoutes />
+      <UiConfirmHost />
     </>
   );
 };

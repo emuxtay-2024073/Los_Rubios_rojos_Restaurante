@@ -4,8 +4,22 @@ import { useUserManagementStore } from '../../auth/store/useUserManagementStore.
 import { Spinner } from '../../auth/components/Spinner.jsx';
 import { CreateUserModal } from './CreateUserModal.jsx';
 import { showError, showSuccess } from '../../../shared/utils/toast.js';
+import {
+  MagnifyingGlassIcon,
+  ShieldCheckIcon,
+  UserGroupIcon,
+  UserPlusIcon,
+  UsersIcon,
+} from '@heroicons/react/24/outline';
 
 const PAGE_SIZE = 8;
+
+const roleBadgeClass = (role = '') => {
+  const normalized = role.toUpperCase();
+  if (normalized === 'SUPER_ADMIN') return 'admin-status-warning';
+  if (normalized === 'ADMIN') return 'admin-status-danger';
+  return 'admin-status-neutral';
+};
 
 export const Users = () => {
   const { users, loading, error, getAllUsers, createUser, updateUserRole } = useUserManagementStore();
@@ -50,6 +64,12 @@ export const Users = () => {
     return filteredUsers.slice(start, start + PAGE_SIZE);
   }, [filteredUsers, currentPage]);
 
+  const stats = useMemo(() => {
+    const admins = users.filter((u) => ['ADMIN', 'SUPER_ADMIN'].includes((u.role || '').toUpperCase())).length;
+    const active = users.filter((u) => Boolean(u.verified ?? u.emailConfirmed)).length;
+    return { active, admins, pending: users.length - active, total: users.length };
+  }, [users]);
+
   const handleCreate = async (payload) => {
     const res = await createUser(payload);
     if (res.success) {
@@ -85,117 +105,135 @@ export const Users = () => {
   if (loading && users.length === 0) return <Spinner />;
 
   return (
-    <div className='p-4'>
-      <div className='flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6'>
+    <div className='admin-page space-y-8'>
+      <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold text-main-blue'>Usuarios</h1>
-          <p className='text-gray-500 text-sm'>Listado de usuarios registrados</p>
+          <p className='admin-kicker'>SuperAdministrador</p>
+          <h1 className='admin-title mt-2'>Usuarios y permisos</h1>
+          <p className='admin-subtitle mt-2 text-sm'>Control de accesos, roles administrativos y estado de verificación.</p>
         </div>
         <button
-          className='bg-main-blue px-4 py-2 rounded text-white hover:opacity-90 transition'
+          type='button'
+          className='admin-button-primary px-5 py-3 text-sm'
           onClick={() => setOpenCreateModal(true)}
         >
-          + Agregar Usuario
+          <UserPlusIcon className='h-5 w-5' />
+          Agregar usuario
         </button>
       </div>
 
-      <div className='bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4'>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder='Buscar por username o email...'
-            className='md:col-span-2 w-full px-3 py-2 border rounded-lg'
-          />
-          <select
-            value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value);
-              setPage(1);
-            }}
-            className='w-full px-3 py-2 border rounded-lg'
-          >
-            <option value='ALL'>Todos los roles</option>
-            <option value='ADMIN'>ADMIN</option>
-            <option value='USER'>USER</option>
-            <option value='SUPER_ADMIN'>SUPER_ADMIN</option>
-          </select>
-        </div>
-      </div>
+      <section className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+        <article className='admin-card p-5'>
+          <UsersIcon className='h-7 w-7 text-[#DC2626]' />
+          <p className='mt-3 text-sm font-bold text-[#6B7280]'>Usuarios registrados</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{stats.total}</p>
+        </article>
+        <article className='admin-card p-5'>
+          <ShieldCheckIcon className='h-7 w-7 text-[#DC2626]' />
+          <p className='mt-3 text-sm font-bold text-[#6B7280]'>Usuarios activos</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{stats.active}</p>
+        </article>
+        <article className='admin-card p-5'>
+          <UserGroupIcon className='h-7 w-7 text-[#DC2626]' />
+          <p className='mt-3 text-sm font-bold text-[#6B7280]'>Administradores</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{stats.admins}</p>
+        </article>
+        <article className='admin-card p-5'>
+          <p className='text-sm font-bold text-[#6B7280]'>Pendientes</p>
+          <p className='mt-2 text-3xl font-black text-[#1F2937]'>{stats.pending}</p>
+          <div className='mt-3 admin-progress'>
+            <span style={{ width: `${stats.total ? (stats.active / stats.total) * 100 : 0}%` }} />
+          </div>
+        </article>
+      </section>
 
-      <div className='bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden'>
+      <section className='admin-panel overflow-hidden'>
+        <div className='border-b border-[#7C2D12]/10 p-5'>
+          <div className='grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]'>
+            <label className='relative block'>
+              <MagnifyingGlassIcon className='pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6B7280]' />
+              <input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder='Buscar por username o email'
+                className='admin-input w-full px-11 py-3 text-sm'
+              />
+            </label>
+            <select
+              value={roleFilter}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                setPage(1);
+              }}
+              className='admin-input w-full px-4 py-3 text-sm font-semibold'
+            >
+              <option value='ALL'>Todos los roles</option>
+              <option value='ADMIN'>ADMIN</option>
+              <option value='USER'>USER</option>
+              <option value='SUPER_ADMIN'>SUPER_ADMIN</option>
+            </select>
+          </div>
+        </div>
+
         <div className='overflow-x-auto'>
-          <table className='min-w-full text-sm'>
-            <thead className='bg-gray-50 text-gray-700'>
+          <table className='admin-table min-w-full text-sm'>
+            <thead>
               <tr>
-                <th className='text-left px-4 py-3'>Email</th>
-                <th className='text-left px-4 py-3'>Username</th>
-                <th className='text-left px-4 py-3'>Rol</th>
-                <th className='text-left px-4 py-3'>Estado</th>
-                <th className='text-left px-4 py-3'>Acciones</th>
+                <th className='px-5 py-4 text-left'>Email</th>
+                <th className='px-5 py-4 text-left'>Username</th>
+                <th className='px-5 py-4 text-left'>Rol</th>
+                <th className='px-5 py-4 text-left'>Estado</th>
+                <th className='px-5 py-4 text-left'>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td className='px-4 py-6 text-center text-gray-500' colSpan={5}>
+                  <td className='px-5 py-10 text-center text-[#6B7280]' colSpan={5}>
                     No hay usuarios para mostrar.
                   </td>
                 </tr>
               ) : (
                 paginatedUsers.map((u) => {
                   const isVerified = Boolean(u.verified ?? u.emailConfirmed);
-                  const isAdmin = u.role === 'ADMIN';
 
                   return (
-                  <tr key={u._id || u.id || u.email} className='border-t hover:bg-gray-50'>
-                    <td className='px-4 py-3 font-medium text-gray-800'>{u.email || '-'}</td>
-                    <td className='px-4 py-3 text-gray-700'>@{u.username}</td>
-                    <td className='px-4 py-3'>
-                      {isSuperAdmin && u.role?.toUpperCase() !== 'SUPER_ADMIN' ? (
-                        <select
-                          value={(u.role || 'USER').toUpperCase()}
-                          onChange={(e) => handleUpdateUserRole(u, e.target.value)}
-                          disabled={loading}
-                          className='rounded-lg border px-3 py-2 text-sm text-gray-800'
-                        >
-                          <option value='USER'>USER</option>
-                          <option value='ADMIN'>ADMIN</option>
-                        </select>
-                      ) : (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {u.role?.toUpperCase() || 'USER'}
+                    <tr key={u._id || u.id || u.email} className='border-t border-[#7C2D12]/10'>
+                      <td className='px-5 py-4 font-extrabold text-[#1F2937]'>{u.email || '-'}</td>
+                      <td className='px-5 py-4 text-[#6B7280]'>@{u.username}</td>
+                      <td className='px-5 py-4'>
+                        {isSuperAdmin && u.role?.toUpperCase() !== 'SUPER_ADMIN' ? (
+                          <select
+                            value={(u.role || 'USER').toUpperCase()}
+                            onChange={(e) => handleUpdateUserRole(u, e.target.value)}
+                            disabled={loading}
+                            className='admin-input px-3 py-2 text-sm font-semibold'
+                          >
+                            <option value='USER'>USER</option>
+                            <option value='ADMIN'>ADMIN</option>
+                          </select>
+                        ) : (
+                          <span className={`admin-status ${roleBadgeClass(u.role)}`}>
+                            {u.role?.toUpperCase() || 'USER'}
+                          </span>
+                        )}
+                      </td>
+                      <td className='px-5 py-4'>
+                        <span className={`admin-status ${isVerified ? 'admin-status-success' : 'admin-status-warning'}`}>
+                          {isVerified ? 'Activo' : 'Pendiente'}
                         </span>
-                      )}
-                    </td>
-                    <td className='px-4 py-3'>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          isVerified
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {isVerified ? 'Activo' : 'Pendiente'}
-                      </span>
-                    </td>
-                    <td className='px-4 py-3'>
-                      {u.role?.toUpperCase() === 'SUPER_ADMIN' ? (
-                        <span className='text-xs text-gray-500'>Protegido</span>
-                      ) : isSuperAdmin ? (
-                        <span className='text-xs text-gray-600'>Editar rol</span>
-                      ) : null}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className='px-5 py-4'>
+                        {u.role?.toUpperCase() === 'SUPER_ADMIN' ? (
+                          <span className='admin-status admin-status-warning'>Protegido</span>
+                        ) : isSuperAdmin ? (
+                          <span className='text-xs font-bold text-[#6B7280]'>Editar rol</span>
+                        ) : null}
+                      </td>
+                    </tr>
                   );
                 })
               )}
@@ -203,8 +241,8 @@ export const Users = () => {
           </table>
         </div>
 
-        <div className='flex items-center justify-between px-4 py-3 border-t bg-gray-50'>
-          <p className='text-xs text-gray-600'>
+        <div className='flex flex-col gap-3 border-t border-[#7C2D12]/10 bg-[#FFF7ED]/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between'>
+          <p className='text-xs font-bold text-[#6B7280]'>
             Mostrando {(currentPage - 1) * PAGE_SIZE + (paginatedUsers.length ? 1 : 0)}
             {' - '}
             {(currentPage - 1) * PAGE_SIZE + paginatedUsers.length} de {filteredUsers.length}
@@ -213,23 +251,23 @@ export const Users = () => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className='px-3 py-1.5 rounded border bg-white text-sm disabled:opacity-50'
+              className='admin-button-secondary px-4 py-2 text-sm disabled:opacity-50'
             >
               Anterior
             </button>
-            <span className='px-2 py-1.5 text-sm text-gray-700'>
+            <span className='rounded-full bg-white px-3 py-2 text-sm font-black text-[#1F2937] ring-1 ring-[#7C2D12]/10'>
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className='px-3 py-1.5 rounded border bg-white text-sm disabled:opacity-50'
+              className='admin-button-secondary px-4 py-2 text-sm disabled:opacity-50'
             >
               Siguiente
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       <CreateUserModal
         isOpen={openCreateModal}

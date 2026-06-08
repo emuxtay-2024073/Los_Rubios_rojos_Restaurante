@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Spinner } from '../../auth/components/Spinner.jsx';
 
 export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) => {
@@ -33,16 +33,11 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 px-3 sm:px-4'>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden'>
-        <div
-          className='p-5 sm:p-6 text-white sticky top-0 z-10'
-          style={{
-            background: 'linear-gradient(90deg, var(--main-blue, #1f4e97) 0%, #1956a3 100%)',
-          }}
-        >
-          <h2 className='text-xl sm:text-2xl font-bold'>Nuevo Usuario</h2>
-          <p className='text-xs sm:text-sm opacity-80'>
+    <div className='admin-modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-3 sm:px-4'>
+      <div className='admin-panel flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden shadow-2xl'>
+        <div className='sticky top-0 z-10 bg-gradient-to-r from-[#DC2626] to-[#7C2D12] p-5 text-white sm:p-6'>
+          <h2 className='text-xl font-black sm:text-2xl'>Nuevo usuario</h2>
+          <p className='text-xs opacity-80 sm:text-sm'>
             Completa la informacion para registrar un nuevo usuario
           </p>
         </div>
@@ -62,7 +57,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                   },
                 })}
                 type='text'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
+                className='admin-input w-full px-4 py-3 text-sm'
               />
               {errors.username && <p className='text-red-600 text-xs'>{errors.username.message}</p>}
             </div>
@@ -80,7 +75,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                 },
               })}
               type='email'
-              className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
+              className='admin-input w-full px-4 py-3 text-sm'
             />
             {errors.email && <p className='text-red-600 text-xs'>{errors.email.message}</p>}
           </div>
@@ -101,7 +96,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                   },
                 })}
                 type='password'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
+                className='admin-input w-full px-4 py-3 text-sm'
               />
               {errors.password && <p className='text-red-600 text-xs'>{errors.password.message}</p>}
             </div>
@@ -119,7 +114,7 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
                   },
                 })}
                 type='password'
-                className='w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-gray-100 shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition'
+                className='admin-input w-full px-4 py-3 text-sm'
               />
               {errors.confirmPassword && (
                 <p className='text-red-600 text-xs'>{errors.confirmPassword.message}</p>
@@ -130,25 +125,21 @@ export const CreateUserModal = ({ isOpen, onClose, onCreate, loading, error }) =
 
           {error && <p className='text-red-600 text-sm text-center'>{error}</p>}
 
-          <div className='flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-400/80'>
+          <div className='flex flex-col-reverse gap-3 border-t border-[#7C2D12]/10 pt-4 sm:flex-row sm:justify-end'>
             <button
               type='button'
               onClick={() => {
                 reset();
                 onClose();
               }}
-              className='w-full sm:w-auto px-5 py-2 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition'
+              className='admin-button-secondary w-full px-5 py-3 text-sm sm:w-auto'
             >
               Cancelar
             </button>
             <button
               type='submit'
               disabled={loading}
-              className='w-full sm:w-auto px-5 py-2 rounded-lg text-white font-medium transition shadow disabled:opacity-60'
-              style={{
-                background: 'linear-gradient(90deg, var(--main-blue, #1f4e97) 0%, #1956a3 100%)',
-                border: 'none',
-              }}
+              className='admin-button-primary w-full px-5 py-3 text-sm disabled:opacity-60 sm:w-auto'
             >
               {loading ? <Spinner small /> : 'Crear usuario'}
             </button>

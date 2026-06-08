@@ -54,12 +54,18 @@ export const Reservations = () => {
   };
 
   useEffect(() => {
-    loadRestaurants();
+    const load = async () => {
+      await loadRestaurants();
+    };
+    load();
   }, []);
 
   useEffect(() => {
     if (selectedRestaurantId) {
-      loadReservations(selectedRestaurantId);
+      const load = async () => {
+        await loadReservations(selectedRestaurantId);
+      };
+      load();
     }
   }, [selectedRestaurantId]);
 
@@ -80,16 +86,17 @@ export const Reservations = () => {
   if (loading) return <Spinner />;
 
   return (
-    <div className='space-y-8'>
+    <div className='admin-page space-y-8'>
       <div className='flex flex-col gap-4 md:flex-row md:items-end md:justify-between'>
         <div>
-          <p className='text-sm text-gray-500'>Reservaciones del restaurante</p>
-          <h1 className='text-3xl font-bold text-main-blue'>Reservaciones</h1>
+          <p className='admin-kicker'>Reservaciones del restaurante</p>
+          <h1 className='admin-title mt-2'>Reservaciones</h1>
+          <p className='admin-subtitle mt-2 text-sm'>Consulta clientes, mesas, horarios y estado de cada reserva.</p>
         </div>
         <select
           value={selectedRestaurantId}
           onChange={(event) => setSelectedRestaurantId(event.target.value)}
-          className='rounded-3xl border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-main-blue focus:outline-none'
+          className='admin-input px-4 py-3 text-sm font-semibold'
         >
           {restaurants.map((restaurant) => (
             <option key={restaurant._id} value={restaurant._id}>
@@ -99,24 +106,26 @@ export const Reservations = () => {
         </select>
       </div>
 
-      <div className='rounded-3xl border border-gray-200 bg-white p-6 shadow-sm'>
+      <div className='admin-panel overflow-hidden'>
+        <div className='p-6'>
         <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
           <div>
-            <p className='text-sm text-gray-500'>Total reservaciones</p>
-            <p className='mt-2 text-3xl font-semibold text-slate-900'>{reservations.length}</p>
+            <p className='text-sm font-bold text-[#6B7280]'>Total reservaciones</p>
+            <p className='mt-2 text-3xl font-black text-[#1F2937]'>{reservations.length}</p>
           </div>
           <input
             type='search'
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder='Buscar cliente, mesa, correo o telefono'
-            className='w-full max-w-xs rounded-3xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-main-blue focus:outline-none'
+            className='admin-input w-full max-w-xs px-4 py-3 text-sm'
           />
         </div>
+        </div>
 
-        <div className='mt-6 overflow-x-auto'>
-          <table className='min-w-full border-collapse text-left'>
-            <thead className='bg-slate-50 text-sm text-slate-600'>
+        <div className='overflow-x-auto'>
+          <table className='admin-table min-w-full text-left'>
+            <thead className='text-sm'>
               <tr>
                 <th className='px-5 py-4'>Cliente</th>
                 <th className='px-5 py-4'>Contacto</th>
@@ -128,7 +137,7 @@ export const Reservations = () => {
             </thead>
             <tbody>
               {filteredReservations.map((reservation) => (
-                <tr key={reservation._id} className='border-t border-gray-100 hover:bg-slate-50'>
+                <tr key={reservation._id} className='border-t border-[#7C2D12]/10'>
                   <td className='px-5 py-4'>{reservation.customerName}</td>
                   <td className='px-5 py-4'>
                     <p>{reservation.customerEmail || 'Sin correo'}</p>
@@ -138,7 +147,7 @@ export const Reservations = () => {
                   <td className='px-5 py-4'>{formatDate(reservation.reservationDate)}</td>
                   <td className='px-5 py-4'>{reservation.numberOfGuests ?? 'N/A'}</td>
                   <td className='px-5 py-4'>
-                    <span className='rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700'>
+                    <span className='admin-status admin-status-success'>
                       {reservation.status ?? 'Confirmada'}
                     </span>
                   </td>
