@@ -71,7 +71,7 @@ const router = express.Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), createRestaurant);
+router.post("/", verifyToken, upload.single("image"), createRestaurant);
 
 /**
  * @swagger
@@ -149,7 +149,7 @@ router.get("/:id", getRestaurantById);
  *       400:
  *         description: Datos inválidos
  */
-router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), updateRestaurant);
+router.put("/:id", verifyToken, upload.single("image"), updateRestaurant);
 
 /**
  * @swagger
@@ -171,7 +171,7 @@ router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), 
  *       500:
  *         description: Error del servidor
  */
-router.delete("/:id", verifyToken, verifyRole(ROLE_ADMIN), deleteRestaurant);
+router.delete("/:id", verifyToken, deleteRestaurant);
 
 /**
  * @swagger
@@ -207,7 +207,7 @@ router.delete("/:id", verifyToken, verifyRole(ROLE_ADMIN), deleteRestaurant);
  *       400:
  *         description: Datos inválidos
  */
-router.post("/:restaurantId/tables", verifyToken, verifyRole(ROLE_ADMIN), async (req, res) => {
+router.post("/:restaurantId/tables", verifyToken, async (req, res) => {
     req.body.restaurant = req.params.restaurantId;
     await createTable(req, res);
 });
@@ -233,12 +233,12 @@ router.get("/:restaurantId/tables", async (req, res) => {
     await getTables(req, res);
 });
 
-router.put("/:restaurantId/tables/:tableId", verifyToken, verifyRole(ROLE_ADMIN), async (req, res) => {
+router.put("/:restaurantId/tables/:tableId", verifyToken, async (req, res) => {
     req.body.restaurant = req.params.restaurantId;
     await updateTable(req, res);
 });
 
-router.delete("/:restaurantId/tables/:tableId", verifyToken, verifyRole(ROLE_ADMIN), async (req, res) => {
+router.delete("/:restaurantId/tables/:tableId", verifyToken, async (req, res) => {
     await deleteTable(req, res);
 });
 

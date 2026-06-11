@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createRestaurant, deleteRestaurant, getRestaurants, updateRestaurant } from '../services/adminApi.js';
 import { Spinner } from '../features/auth/components/Spinner.jsx';
 import { showError, showSuccess } from '../shared/utils/toast.js';
@@ -11,6 +12,7 @@ import {
   PlusIcon,
   TrashIcon,
   UserIcon,
+  CheckIcon,
 } from '@heroicons/react/24/outline';
 
 const emptyRestaurant = {
@@ -142,6 +144,7 @@ export const Restaurants = () => {
         openingHours: `${form.openingTime} - ${form.closingTime}`,
       };
 
+      // Usar FormData solo si hay una nueva imagen (File)
       let payload = payloadData;
       if (form.image instanceof File) {
         payload = new FormData();
@@ -151,17 +154,21 @@ export const Restaurants = () => {
 
       if (activeRestaurant) {
         await updateRestaurant(activeRestaurant._id, payload);
-        showSuccess('Restaurante actualizado');
+        showSuccess('Restaurante actualizado correctamente');
       } else {
         await createRestaurant(payload);
-        showSuccess('Restaurante creado');
+        showSuccess('Restaurante creado correctamente');
       }
 
       setModalOpen(false);
+      setForm(emptyRestaurant);
       await loadRestaurants();
     } catch (error) {
-      console.error(error);
-      showError(error.response?.data?.message || 'No se pudo guardar el restaurante');
+      console.error('Error al guardar restaurante:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'No se pudo guardar el restaurante';
+      console.error('Status:', error.response?.status);
+      console.error('Error completo:', error.response?.data);
+      showError(errorMessage);
     }
   };
 
@@ -275,22 +282,22 @@ export const Restaurants = () => {
         ))}
       </div>
 
-      {modalOpen && (
-        <div className='admin-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4'>
-          <div className='admin-panel max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto p-6 shadow-2xl'>
-            <div className='flex items-center justify-between gap-4'>
+      {modalOpen && createPortal(
+        <div className='admin-modal-backdrop fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4'>
+          <div className='admin-panel max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto p-6 shadow-2xl sm:p-8'>
+            <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
               <div>
                 <p className='admin-kicker'>Formulario</p>
                 <h2 className='mt-1 text-2xl font-black text-[#1F2937]'>
                   {activeRestaurant ? 'Editar restaurante' : 'Nueva ubicación'}
                 </h2>
               </div>
-              <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary px-4 py-2 text-sm'>
+              <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary px-4 py-2 text-sm whitespace-nowrap'>
                 Cerrar
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className='mt-6 grid gap-4 sm:grid-cols-2'>
+            <form onSubmit={handleSubmit} className='mt-8 grid gap-5 lg:grid-cols-2'>
               {[
                 ['name', 'Nombre', 'text'],
                 ['city', 'Ciudad', 'text'],
@@ -338,7 +345,7 @@ export const Restaurants = () => {
                 {errors.closingTime && <p className='mt-1 text-xs font-bold text-red-600'>{errors.closingTime}</p>}
               </label>
 
-              <label className='block sm:col-span-2'>
+              <label className='block lg:col-span-2'>
                 <span className='text-sm font-bold text-[#1F2937]'>Imagen del restaurante</span>
                 <input
                   type='file'
@@ -348,11 +355,11 @@ export const Restaurants = () => {
                 />
                 {errors.image && <p className='mt-1 text-xs font-bold text-red-600'>{errors.image}</p>}
                 {form.image && (
-                  <div className='mt-3 space-y-2'>
+                  <div className='mt-4 space-y-2'>
                     <img
                       src={form.image instanceof File ? URL.createObjectURL(form.image) : resolveCloudinaryImageUrl(form.image)}
                       alt='Vista previa del restaurante'
-                      className='h-44 w-full rounded-2xl object-cover'
+                      className='h-48 w-full rounded-xl object-cover shadow-md'
                     />
                     <p className='text-xs font-semibold text-[#6B7280]'>
                       {typeof form.image === 'string' ? 'Imagen actual guardada' : form.image.name}
@@ -361,18 +368,19 @@ export const Restaurants = () => {
                 )}
               </label>
 
-              <div className='flex justify-end gap-3 pt-2 sm:col-span-2'>
-                <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary px-5 py-3 text-sm'>
+              <div className='flex flex-col-reverse justify-end gap-3 pt-4 sm:flex-row lg:col-span-2'>
+                <button type='button' onClick={() => setModalOpen(false)} className='admin-button-secondary w-full px-5 py-3 text-sm sm:w-auto'>
                   Cancelar
                 </button>
-                <button type='submit' className='admin-button-primary px-6 py-3 text-sm'>
-                  Guardar
+                <button type='submit' className='group relative w-full overflow-hidden rounded-full bg-gradient-to-r from-[#DC2626] via-[#B91C1C] to-[#7C2D12] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/60 hover:-translate-y-0.5 sm:w-auto flex items-center justify-center gap-2'>
+                  <CheckIcon className='h-5 w-5 transition-transform group-hover:scale-110' />
+                  <span>Guardar cambios</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 };
