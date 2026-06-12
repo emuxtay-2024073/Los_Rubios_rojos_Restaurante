@@ -400,3 +400,107 @@ body {
   background: rgba(31, 41, 55, 0.54);
   backdrop-filter: blur(10px);
 }
+
+/* ===== MODAL FORM FIX ===== */
+
+/* Panel del modal: fondo blanco sólido, sin translucidez */
+.admin-modal-backdrop .admin-panel {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Labels oscuros y legibles */
+.admin-modal-backdrop label > span,
+.admin-modal-backdrop .text-sm.font-bold {
+  color: #1a1a1a !important;
+  font-weight: 700 !important;
+}
+
+/* .admin-kicker dentro del modal */
+.admin-modal-backdrop .admin-kicker {
+  color: #7c2d12 !important;
+}
+
+/* Título del modal */
+.admin-modal-backdrop h2 {
+  color: #111827 !important;
+}
+
+/* ---- Inputs, selects, textareas ---- */
+/* Estilo base: pill redondeado, fondo crema cálido, sin borde visible */
+.admin-modal-backdrop .admin-input,
+.admin-modal-backdrop input.admin-input,
+.admin-modal-backdrop select.admin-input,
+.admin-modal-backdrop textarea.admin-input {
+  background: #fef0e8 !important;
+  border: 1.5px solid transparent !important;
+  border-radius: 999px !important;
+  color: #1a1a1a !important;
+  box-shadow: none !important;
+  transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease !important;
+}
+
+/* Placeholder en gris suave */
+.admin-modal-backdrop .admin-input::placeholder {
+  color: #b0a09a !important;
+}
+
+/* Focus: borde rojo, fondo blanco, glow suave */
+.admin-modal-backdrop .admin-input:focus,
+.admin-modal-backdrop input.admin-input:focus,
+.admin-modal-backdrop select.admin-input:focus,
+.admin-modal-backdrop textarea.admin-input:focus {
+  background: #ffffff !important;
+  border-color: rgba(220, 38, 38, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  outline: none !important;
+}
+
+/* Textarea: vuelve rectangular con radio menor */
+.admin-modal-backdrop textarea.admin-input {
+  border-radius: 1.25rem !important;
+  resize: vertical;
+  min-height: 7rem;
+}
+
+/* Select: cursor pointer */
+.admin-modal-backdrop select.admin-input {
+  cursor: pointer;
+}
+
+/* File input: pill crema */
+.admin-modal-backdrop input[type="file"].admin-input {
+  border-radius: 999px !important;
+  cursor: pointer;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+/* Encabezado del modal con separador sutil */
+.admin-modal-backdrop .admin-panel > div:first-child {
+  padding-bottom: 1.25rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid #f3e8e0;
+}
+
+/* Scrollbar del modal discreta */
+.admin-modal-backdrop .admin-panel::-webkit-scrollbar { width: 5px; }
+.admin-modal-backdrop .admin-panel::-webkit-scrollbar-track { background: #fff7f3; border-radius: 99px; }
+.admin-modal-backdrop .admin-panel::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.25); border-radius: 99px; }
+.admin-modal-backdrop .admin-panel::-webkit-scrollbar-thumb:hover { background: rgba(220, 38, 38, 0.5); }
+
+/* ---- Formularios inline (fuera de modal, ej. Tables) ---- */
+.admin-panel .admin-input {
+  background: #fef0e8;
+  border: 1.5px solid transparent;
+  color: #1a1a1a;
+}
+.admin-panel .admin-input:focus {
+  background: #ffffff;
+  border-color: rgba(220, 38, 38, 0.55);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  outline: none;
+}

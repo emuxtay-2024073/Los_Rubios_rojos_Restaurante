@@ -49,9 +49,19 @@ public class EmailService : IEmailService
             var useImplicitSsl = bool.TryParse(smtpSettings["UseImplicitSsl"], out var implicitSsl)
                 ? implicitSsl
                 : port == 465;
+            var enableSsl = bool.TryParse(smtpSettings["EnableSsl"], out var enableSslValue) && enableSslValue;
+            var ignoreCertificateErrors = bool.TryParse(smtpSettings["IgnoreCertificateErrors"], out var ignoreCert) && ignoreCert;
+
+            if (ignoreCertificateErrors)
+            {
+                client.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
             var socketOptions = useImplicitSsl
                 ? SecureSocketOptions.SslOnConnect
-                : SecureSocketOptions.StartTls;
+                : enableSsl
+                    ? SecureSocketOptions.StartTls
+                    : SecureSocketOptions.None;
 
             await client.ConnectAsync(host, port, socketOptions);
             await client.AuthenticateAsync(username, password);

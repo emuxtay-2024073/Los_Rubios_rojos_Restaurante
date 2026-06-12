@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Card, EmptyState } from '../../../components/common/Common.jsx';
 import Button from '../../../components/common/Button.jsx';
+import BackButton from '../../../components/common/BackButton.jsx';
 import useMenu from '../../menu/hooks/useMenu.js';
 import useRestaurantAdmin from '../hooks/useRestaurantAdmin.js';
 import restaurantClient from '../../../api/restaurantClient.js';
@@ -213,6 +214,8 @@ export default function RestaurantDetailScreen({ route, navigation }) {
 
   const Header = () => (
     <View style={styles.header}>
+      <BackButton onPress={() => navigation.goBack()} />
+      
       {restaurant.image ? (
         <Image source={{ uri: restaurant.image }} style={styles.cover} />
       ) : null}

@@ -1,11 +1,12 @@
 // client-user/src/features/menu/screens/MenuDetailScreen.jsx
-import React from 'react';
-import { View, Text, StyleSheet, Image, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, Alert, TouchableOpacity } from 'react-native';
 import Button from '../../../components/common/Button.jsx';
 import { COLORS, FONT_SIZE, SPACING } from '../../../shared/constants/theme.js';
 
 export default function MenuDetailScreen({ route, navigation }) {
   const item = route.params?.item;
+  const [quantity, setQuantity] = useState(1);
 
   if (!item) {
     return (
@@ -16,17 +17,39 @@ export default function MenuDetailScreen({ route, navigation }) {
   }
 
   const handleAddToOrder = () => {
-    navigation.navigate('CreateOrder', { initialItem: item });
-    Alert.alert('Agregado', 'Producto agregado al pedido.');
+    // Navegar a CreateOrder pasando el item con la cantidad seleccionada
+    navigation.navigate('CreateOrder', {
+      restaurant: item.restaurant || { _id: item.restaurantId },
+      initialItem: { ...item, quantity }
+    });
   };
 
   return (
     <View style={styles.container}>
-      {item.image ? <Image source={{ uri: item.image }} style={styles.image} /> : null}
+      {item.image ? (
+        <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
+      ) : null}
       <Text style={styles.name}>{item.name}</Text>
       <Text style={styles.category}>{item.category}</Text>
       <Text style={styles.description}>{item.description}</Text>
       <Text style={styles.price}>${item.price?.toFixed(2)}</Text>
+
+      <View style={styles.quantityRow}>
+        <TouchableOpacity
+          style={styles.qtyBtn}
+          onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+        >
+          <Text style={styles.qtyBtnText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.qtyValue}>{quantity}</Text>
+        <TouchableOpacity
+          style={styles.qtyBtn}
+          onPress={() => setQuantity((q) => q + 1)}
+        >
+          <Text style={styles.qtyBtnText}>+</Text>
+        </TouchableOpacity>
+      </View>
+
       <Button title="Agregar al pedido" onPress={handleAddToOrder} />
     </View>
   );
@@ -66,6 +89,34 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     marginBottom: SPACING.lg
+  },
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.lg,
+    marginBottom: SPACING.lg
+  },
+  qtyBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  qtyBtnText: {
+    color: '#fff',
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '700',
+    lineHeight: FONT_SIZE.lg + 4
+  },
+  qtyValue: {
+    color: COLORS.text,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '700',
+    minWidth: 32,
+    textAlign: 'center'
   },
   centered: {
     flex: 1,
