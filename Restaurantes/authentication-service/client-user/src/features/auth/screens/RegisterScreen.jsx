@@ -95,6 +95,12 @@ export default function RegisterScreen({ navigation }) {
           />
 
           <Button title="Registrar" onPress={handleSubmit(onSubmit)} loading={loading} />
+          <Button
+            title="Volver al login"
+            variant="secondary"
+            onPress={() => navigation.navigate('Login')}
+            style={styles.backButton}
+          />
           <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
             <Text style={styles.loginLinkText}>¿Ya tienes cuenta? Inicia sesión</Text>
           </TouchableOpacity>
@@ -130,8 +136,11 @@ const styles = StyleSheet.create({
   form: {
     width: '100%'
   },
+  backButton: {
+    marginTop: SPACING.md
+  },
   loginLink: {
-    marginTop: SPACING.md,
+    marginTop: SPACING.sm,
     alignItems: 'center'
   },
   loginLinkText: {

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import orderClient from '../../../api/orderClient.js';
 
-export default function useOrders() {
+export default function useOrders(restaurantId) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,10 +12,19 @@ export default function useOrders() {
     setError(null);
 
     try {
-      const response = await orderClient.get('/me');
+      const response = restaurantId
+        ? await orderClient.get('/')
+        : await orderClient.get('/me');
       const payload = response.data.data || response.data;
       const items = Array.isArray(payload) ? payload : [];
-      setOrders(items.map((item) => ({
+      const filtered = restaurantId
+        ? items.filter((item) => {
+            const tableRestaurant = item.table?.restaurant || item.table?.restaurant?._id;
+            return tableRestaurant?.toString() === restaurantId?.toString();
+          })
+        : items;
+
+      setOrders(filtered.map((item) => ({
         id: item.id || item._id,
         total: item.total,
         status: item.status,
@@ -28,7 +37,7 @@ export default function useOrders() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [restaurantId]);
 
   const createOrder = useCallback(async (payload) => {
     setLoading(true);

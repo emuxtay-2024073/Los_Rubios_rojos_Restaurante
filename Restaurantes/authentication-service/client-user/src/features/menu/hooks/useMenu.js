@@ -22,7 +22,12 @@ export default function useMenu() {
         price: item.price,
         image: item.image,
         category: item.category,
-        restaurantId: item.restaurantId
+        restaurantId:
+          item.restaurant?.id ||
+          item.restaurant?._id ||
+          item.restaurantId ||
+          item.restaurant ||
+          null
       })));
     } catch (err) {
       setError(err.response?.data?.message || 'Error inesperado');

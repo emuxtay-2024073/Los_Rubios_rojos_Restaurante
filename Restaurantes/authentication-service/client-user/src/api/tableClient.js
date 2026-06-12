@@ -1,16 +1,15 @@
-// client-user/src/api/restaurantClient.js
 import axios from 'axios';
 import ENDPOINTS from '../shared/constants/endpoints.js';
 import { useAuthStore } from '../store/authStore.js';
 
-const restaurantClient = axios.create({
-  baseURL: ENDPOINTS.RESTAURANT,
+const tableClient = axios.create({
+  baseURL: ENDPOINTS.TABLE,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-restaurantClient.interceptors.request.use((config) => {
+tableClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
     config.headers = {
@@ -21,4 +20,4 @@ restaurantClient.interceptors.request.use((config) => {
   return config;
 });
 
-export default restaurantClient;
+export default tableClient;
