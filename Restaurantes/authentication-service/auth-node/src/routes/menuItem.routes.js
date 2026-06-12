@@ -62,7 +62,7 @@ const router = express.Router();
  *       500:
  *         description: Error del servidor
  */
-router.post("/", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), createMenuItem);
+router.post("/", verifyToken, upload.single("image"), createMenuItem);
 
 /**
  * @swagger
@@ -134,7 +134,7 @@ router.get("/restaurant/:restaurantId", getMenuItemsByRestaurant);
  *       400:
  *         description: Datos inválidos
  */
-router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), updateMenuItem);
+router.put("/:id", verifyToken, upload.single("image"), updateMenuItem);
 
 /**
  * @swagger
@@ -156,6 +156,6 @@ router.put("/:id", verifyToken, verifyRole(ROLE_ADMIN), upload.single("image"), 
  *       500:
  *         description: Error del servidor
  */
-router.delete("/:id", verifyToken, verifyRole(ROLE_ADMIN), deleteMenuItem);
+router.delete("/:id", verifyToken, deleteMenuItem);
 
 export default router;

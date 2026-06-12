@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   createMenuItemForRestaurant,
   deleteMenuItem,
@@ -107,8 +108,14 @@ export const Menus = () => {
     }
   }, [selectedRestaurantId]);
 
+  const defaultCategories = ['Entradas', 'Platos Principales', 'Bebidas', 'Postres', 'Especiales'];
+
   const categories = useMemo(
-    () => ['Todos', ...new Set(menuItems.map((item) => item.category || 'General'))],
+    () => {
+      const existingCategories = new Set(menuItems.map((item) => item.category || 'General'));
+      const allCategories = new Set([...defaultCategories, ...existingCategories]);
+      return ['Todos', ...allCategories];
+    },
     [menuItems],
   );
 
@@ -146,22 +153,27 @@ export const Menus = () => {
     }
 
     try {
-      const payloadData = {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        category: form.category.trim(),
-        image: form.image,
-        price: Number(form.price),
-      };
-
-      let payload = payloadData;
+      let payload;
+      
       if (form.image instanceof File) {
+        // Nueva imagen - usar FormData
         payload = new FormData();
-        Object.entries(payloadData).forEach(([key, value]) => {
-          if (key !== 'image' || value instanceof File) {
-            payload.append(key, value);
-          }
-        });
+        payload.append('name', form.name.trim());
+        payload.append('description', form.description.trim());
+        payload.append('category', form.category.trim());
+        payload.append('price', Number(form.price));
+        payload.append('image', form.image);
+      } else {
+        // Imagen existente o sin imagen - usar JSON
+        payload = {
+          name: form.name.trim(),
+          description: form.description.trim(),
+          category: form.category.trim(),
+          price: Number(form.price),
+        };
+        if (form.image && typeof form.image === 'string') {
+          payload.image = form.image;
+        }
       }
 
       if (activeMenuItem) {
@@ -338,8 +350,8 @@ export const Menus = () => {
         )}
       </div>
 
-      {menuModalOpen && (
-        <div className='admin-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4'>
+      {menuModalOpen && createPortal(
+        <div className='admin-modal-backdrop fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4'>
           <div className='admin-panel max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto p-6 shadow-2xl'>
             <div className='flex items-center justify-between gap-4'>
               <div>
@@ -374,13 +386,19 @@ export const Menus = () => {
               </label>
               <label className='block'>
                 <span className='text-sm font-bold text-[#1F2937]'>Categoría</span>
-                <input
-                  type='text'
+                <select
                   required
                   value={form.category}
                   onChange={(event) => setForm({ ...form, category: event.target.value })}
                   className='admin-input mt-2 w-full px-4 py-3 text-sm'
-                />
+                >
+                  <option value=''>Selecciona una categoría</option>
+                  {categories.filter((cat) => cat !== 'Todos').map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
                 {formErrors.category && <p className='mt-1 text-xs font-bold text-red-600'>{formErrors.category}</p>}
               </label>
               <label className='block sm:col-span-2'>
@@ -434,7 +452,7 @@ export const Menus = () => {
                 )}
                 {formErrors.image && <p className='mt-1 text-xs font-bold text-red-600'>{formErrors.image}</p>}
               </label>
-              <div className='flex justify-end gap-3 pt-2 sm:col-span-2'>
+              <div className='flex flex-col-reverse justify-end gap-3 pt-4 sm:flex-row sm:col-span-2'>
                 <button
                   type='button'
                   onClick={() => {
@@ -442,19 +460,22 @@ export const Menus = () => {
                     setForm(emptyMenu);
                     setMenuModalOpen(false);
                   }}
-                  className='admin-button-secondary px-5 py-3 text-sm'
+                  className='admin-button-secondary w-full px-5 py-3 text-sm sm:w-auto'
                 >
                   Cancelar
                 </button>
-                <button type='submit' className='admin-button-primary px-6 py-3 text-sm'>
-                  <SparklesIcon className='h-4 w-4' />
-                  Guardar
+                <button 
+                  type='submit' 
+                  className='group relative w-full overflow-hidden rounded-full bg-gradient-to-r from-[#DC2626] via-[#B91C1C] to-[#7C2D12] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/60 hover:-translate-y-0.5 sm:w-auto flex items-center justify-center gap-2'
+                >
+                  <SparklesIcon className='h-5 w-5 transition-transform group-hover:scale-110' />
+                  <span>Guardar platillo</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 };

@@ -14,6 +14,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import roleRoutes from "./src/routes/role.routes.js";
 import tableRoutes from "./src/routes/table.routes.js";
+import reservationRoutes from "./src/routes/reservation.routes.js";
 
 // Importar modelos
 import Restaurant from "./src/models/Restaurant.js";
@@ -250,6 +251,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/tables", tableRoutes);
+app.use("/api/reservations", reservationRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -292,3 +294,4 @@ process.on('SIGTERM', () => {
         process.exit(0);
     });
 });
+ 
