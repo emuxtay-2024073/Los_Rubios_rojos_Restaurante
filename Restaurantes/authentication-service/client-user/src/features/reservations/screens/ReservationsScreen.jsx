@@ -5,8 +5,9 @@ import { Card, EmptyState, LoadingSpinner } from '../../../components/common/Com
 import useReservations from '../hooks/useReservations.js';
 import { COLORS, FONT_SIZE, SPACING } from '../../../shared/constants/theme.js';
 
-export default function ReservationsScreen() {
-  const { reservations, loading, error, refresh, cancelReservation } = useReservations();
+export default function ReservationsScreen({ route }) {
+  const restaurantId = route?.params?.restaurantId;
+  const { reservations, loading, error, refresh, cancelReservation } = useReservations(restaurantId);
 
   const handleCancel = async (id, status) => {
     if (status !== 'Pendiente' && status !== 'Confirmada') {

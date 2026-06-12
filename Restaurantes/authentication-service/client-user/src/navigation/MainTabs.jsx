@@ -9,6 +9,7 @@ import CreateOrderScreen from '../features/orders/screens/CreateOrderScreen.jsx'
 import ReservationsScreen from '../features/reservations/screens/ReservationsScreen.jsx';
 import CreateReservationScreen from '../features/reservations/screens/CreateReservationScreen.jsx';
 import OrdersScreen from '../features/orders/screens/OrdersScreen.jsx';
+import TablesScreen from '../features/tables/screens/TablesScreen.jsx';
 import ProfileScreen from '../features/profile/screens/ProfileScreen.jsx';
 
 const Tab = createBottomTabNavigator();
@@ -23,6 +24,7 @@ function RestaurantsStackNavigator() {
     <RestaurantsStack.Navigator screenOptions={{ headerShown: false }}>
       <RestaurantsStack.Screen name="Restaurants" component={RestaurantsScreen} />
       <RestaurantsStack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+      <RestaurantsStack.Screen name="Tables" component={TablesScreen} />
     </RestaurantsStack.Navigator>
   );
 }

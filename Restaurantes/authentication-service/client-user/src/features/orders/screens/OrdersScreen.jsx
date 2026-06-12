@@ -5,8 +5,9 @@ import { Card, EmptyState, LoadingSpinner } from '../../../components/common/Com
 import useOrders from '../hooks/useOrders.js';
 import { COLORS, FONT_SIZE, SPACING } from '../../../shared/constants/theme.js';
 
-export default function OrdersScreen() {
-  const { orders, loading, error, refresh } = useOrders();
+export default function OrdersScreen({ route }) {
+  const restaurantId = route?.params?.restaurantId;
+  const { orders, loading, error, refresh } = useOrders(restaurantId);
 
   const renderItem = ({ item }) => (
     <Card style={styles.card}>

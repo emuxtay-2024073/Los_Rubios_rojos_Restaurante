@@ -53,6 +53,12 @@ export default function ForgotPasswordScreen({ navigation }) {
           />
 
           <Button title="Enviar solicitud" onPress={handleSubmit(onSubmit)} loading={loading} />
+          <Button
+            title="Volver al login"
+            variant="secondary"
+            onPress={() => navigation.navigate('Login')}
+            style={styles.backButton}
+          />
           <Text style={styles.backText} onPress={() => navigation.navigate('Login')}>
             Volver al inicio de sesión
           </Text>
@@ -88,8 +94,11 @@ const styles = StyleSheet.create({
   form: {
     width: '100%'
   },
+  backButton: {
+    marginTop: SPACING.md
+  },
   backText: {
-    marginTop: SPACING.md,
+    marginTop: SPACING.sm,
     textAlign: 'center',
     color: COLORS.primary,
     fontWeight: '700'

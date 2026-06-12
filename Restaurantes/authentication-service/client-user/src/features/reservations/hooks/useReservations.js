@@ -1,8 +1,9 @@
 // client-user/src/features/reservations/hooks/useReservations.js
 import { useState, useEffect, useCallback } from 'react';
 import reservationClient from '../../../api/reservationClient.js';
+import restaurantClient from '../../../api/restaurantClient.js';
 
-export default function useReservations() {
+export default function useReservations(restaurantId) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +13,9 @@ export default function useReservations() {
     setError(null);
 
     try {
-      const response = await reservationClient.get('/me');
+      const response = restaurantId
+        ? await restaurantClient.get(`/${restaurantId}/reservations`)
+        : await reservationClient.get('/me');
       const payload = response.data.data || response.data;
       const items = Array.isArray(payload) ? payload : [];
       setReservations(items.map((item) => ({
@@ -29,7 +32,7 @@ export default function useReservations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [restaurantId]);
 
   const createReservation = useCallback(async (payload) => {
     setLoading(true);

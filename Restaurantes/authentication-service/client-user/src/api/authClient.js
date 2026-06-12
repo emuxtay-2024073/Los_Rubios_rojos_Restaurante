@@ -2,17 +2,17 @@
 import axios from 'axios';
 import ENDPOINTS from '../shared/constants/endpoints.js';
 import { useAuthStore, getStoredRefreshToken, saveRefreshToken } from '../store/authStore.js';
-
+ 
 const authInstance = axios.create({
   baseURL: ENDPOINTS.AUTH,
   headers: {
     'Content-Type': 'application/json'
   }
 });
-
+ 
 let isRefreshing = false;
 let failedQueue = [];
-
+ 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(({ resolve, reject, originalRequest }) => {
     if (error) {
@@ -24,24 +24,20 @@ const processQueue = (error, token = null) => {
   });
   failedQueue = [];
 };
-
+ 
 const isAuthRoute = (url) => {
   if (!url) return false;
   const normalized = url.toLowerCase();
-  return [
-    '/login',
-    '/register',
-    '/verify-email',
-    '/forgot-password',
-    '/reset-password'
-  ].some((route) => normalized.includes(route));
+  return ['/login', '/register', '/verify-email', '/forgot-password', '/reset-password'].some(
+    (route) => normalized.includes(route)
+  );
 };
-
+ 
 const isRefreshRoute = (url) => {
   if (!url) return false;
   return url.toLowerCase().includes('/refresh-token');
 };
-
+ 
 authInstance.interceptors.request.use(async (config) => {
   const token = useAuthStore.getState().token;
   if (token && config.headers && !isAuthRoute(config.url) && !isRefreshRoute(config.url)) {
@@ -49,12 +45,12 @@ authInstance.interceptors.request.use(async (config) => {
   }
   return config;
 });
-
+ 
 authInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
+ 
     if (
       !originalRequest ||
       originalRequest._retry ||
@@ -68,16 +64,16 @@ authInstance.interceptors.response.use(
       }
       return Promise.reject(error);
     }
-
+ 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject, originalRequest });
       });
     }
-
+ 
     originalRequest._retry = true;
     isRefreshing = true;
-
+ 
     return new Promise(async (resolve, reject) => {
       try {
         const refreshToken = await getStoredRefreshToken();
@@ -86,20 +82,17 @@ authInstance.interceptors.response.use(
           reject(error);
           return;
         }
-
+ 
         const response = await authInstance.post('/refresh-token', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken, user } = response.data;
-
+ 
         if (accessToken) {
           useAuthStore.getState().setAccessToken(accessToken);
-        }
-        if (newRefreshToken) {
-          await saveRefreshToken(newRefreshToken);
         }
         if (user) {
           useAuthStore.getState().updateUser(user);
         }
-
+ 
         processQueue(null, accessToken);
         resolve(authInstance(originalRequest));
       } catch (refreshError) {
@@ -112,5 +105,6 @@ authInstance.interceptors.response.use(
     });
   }
 );
-
+ 
 export default authInstance;
+ 

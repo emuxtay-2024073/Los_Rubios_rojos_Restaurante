@@ -5,8 +5,12 @@ import { Card, LoadingSpinner, EmptyState } from '../../../components/common/Com
 import useMenu from '../hooks/useMenu.js';
 import { COLORS, FONT_SIZE, SPACING } from '../../../shared/constants/theme.js';
 
-export default function MenuScreen({ navigation }) {
+export default function MenuScreen({ route, navigation }) {
+  const restaurantId = route?.params?.restaurantId;
   const { menuItems, loading, error, refresh } = useMenu();
+  const filteredMenuItems = restaurantId
+    ? menuItems.filter((item) => item.restaurantId === restaurantId)
+    : menuItems;
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('MenuDetail', { item })}>
@@ -28,9 +32,9 @@ export default function MenuScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Menú</Text>
+      <Text style={styles.title}>{restaurantId ? 'Menú del restaurante' : 'Menú'}</Text>
       <FlatList
-        data={menuItems}
+        data={filteredMenuItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={styles.list}

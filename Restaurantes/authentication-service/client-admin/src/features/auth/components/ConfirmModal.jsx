@@ -22,7 +22,7 @@ export const UiConfirmHost = () => {
   };
 
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4'>
+    <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/30 px-4'>
       <div
         className='bg-white p-6 rounded-xl w-full max-w-md text-center shadow-lg border border-gray-200'
         role='dialog'
