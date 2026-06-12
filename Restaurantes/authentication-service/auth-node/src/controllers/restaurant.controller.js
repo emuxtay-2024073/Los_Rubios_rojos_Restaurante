@@ -30,6 +30,8 @@ const buildRestaurantPayload = async (body, file) => {
 
 export const createRestaurant = async (req, res) => {
     try {
+        console.log("[createRestaurant] body:", req.body);
+        console.log("[createRestaurant] file:", req.file);
         const payload = await buildRestaurantPayload(req.body, req.file);
         const restaurant = await Restaurant.create(payload);
         res.status(201).json({
@@ -37,7 +39,8 @@ export const createRestaurant = async (req, res) => {
             restaurant
         });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("[createRestaurant] ERROR:", error);
+        res.status(400).json({ message: error.message || "Error desconocido", error: String(error) });
     }
 };
 
@@ -103,4 +106,3 @@ export const deleteRestaurant = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-

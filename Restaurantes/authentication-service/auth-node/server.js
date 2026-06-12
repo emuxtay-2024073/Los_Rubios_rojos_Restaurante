@@ -7,6 +7,16 @@ import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
+dotenv.config();
+
+// ADVERTENCIA: solo para desarrollo local si tu red (proxy/antivirus) intercepta TLS
+// y causa "unable to verify the first certificate" al subir imágenes a Cloudinary.
+// NUNCA usar en producción.
+if (process.env.NODE_ENV !== "production" && process.env.DEV_DISABLE_TLS_VERIFY === "true") {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
+
 import restaurantRoutes from "./src/routes/restaurant.routes.js";
 import menuItemRoutes from "./src/routes/menuItem.routes.js";
 import orderRoutes from "./src/routes/order.routes.js";
